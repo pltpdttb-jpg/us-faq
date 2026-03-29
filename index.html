@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Knowledge Verification - US Multi-Asset</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Prompt', 'Nunito', 'sans-serif'] },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: 0, transform: 'translateY(20px)' },
+                            '100%': { opacity: 1, transform: 'translateY(0)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; }
+        @media print {
+            body { background-color: white; }
+            .print\:hidden { display: none !important; }
+            .print\:shadow-none { box-shadow: none !important; }
+            .print\:p-0 { padding: 0 !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // ==========================================
+        // 🔧 SUPABASE CONFIGURATION 
+        // ==========================================
+        const SUPABASE_URL = "https://lyfqqrofqbyfezwxwhph.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5ZnFxcm9mcWJ5ZmV6d3h3aHBoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0ODc3MTAsImV4cCI6MjA4OTA2MzcxMH0.U5rhRSSTplQbcXBL16odRMRL26dy1RCxC_6jkHjhaWA";
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- ICONS ---
+        const Icons = {
+            User: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
+            Briefcase: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>,
+            Clock: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>,
+            CheckCircle: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>,
+            XCircle: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>,
+            ChevronRight: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>,
+            AlertTriangle: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>,
+            FileText: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>,
+            ShieldCheck: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg>,
+            Mail: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>,
+            Award: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>,
+            RotateCcw: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>,
+            Check: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>,
+            Download: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>,
+            PlusCircle: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+        };
+
+        // --- DATABASE: ข้อมูลพนักงานเริ่มต้น 29 ท่าน ---
+        const INITIAL_EMPLOYEES = [
+            { id: '003761', name: 'วรณัน สุขแก้ว (มะปราง)', zone: 'Hadyai', email: 'Woranan.Sukkeaw@prudential.co.th' },
+            { id: '007278', name: 'อรวรรณ ทองชูช่วย (จิงโจ้)', zone: 'Hadyai', email: 'Orawan.Thongchoochuay@prudential.co.th' },
+            { id: '007120', name: 'ธนิกกานต์ มะโนแสน (รวงข้าว)', zone: 'Hadyai', email: 'Tanikkarn.Manosaen@prudential.co.th' },
+            { id: '005395', name: 'ภัทรวีร์ ศรีคามา (หยก)', zone: 'Hadyai', email: 'Phattarawee.Srikama@prudential.co.th' },
+            { id: '004812', name: 'ภริญญา ขวัญทองยิ้ม (แอม)', zone: 'Hadyai', email: 'Parinda.Dumkaew@prudential.co.th' },
+            { id: '006714', name: 'ณิชกานต์ สุวรรณอำภา (เฟรม)', zone: 'Hadyai', email: 'Nitchakarn.Suwanampa@prudential.co.th' },
+            { id: '007161', name: 'สุนารี สุขเจริญ (เอ๋)', zone: 'Phuket', email: 'Sunaree.Sukchareon@prudential.co.th' },
+            { id: '008224', name: 'ณัฏฐนิช แจ่มจำรัส (จุ๋ม)', zone: 'Phuket', email: 'Natthanich.Jamjumras@prudential.co.th' },
+            { id: '008295', name: 'ภัครัฐรพี สิทธิชนะจุฑาพร (เกด)', zone: 'Phuket', email: 'Pakratrapee.Sitthichanajuthapon@prudential.co.th' },
+            { id: '007744', name: 'เพ็ญวรรณ สุขลิม (หงส์)', zone: 'Phuket', email: 'Penjawan.Suklim@prudential.co.th' },
+            { id: '006692', name: 'จุฑามาศ ควนขัน (นิว)', zone: 'Phuket', email: 'Jutamas.Kuankan@prudential.co.th' },
+            { id: '006186', name: 'บุษยมาส โอสถสภา (จ๊ะเอ๋)', zone: 'Ratchaburi', email: 'Butsayamat.Osotspa@prudential.co.th' },
+            { id: '008360', name: 'วิมลมณี กำบังตน (เนื้อเงิน)', zone: 'Ratchaburi', email: 'Wimolmanee.Kambangton@prudential.co.th' },
+            { id: '003451', name: 'อธิป มัจฉาเดช (อั้ม)', zone: 'Ratchaburi', email: 'Athip.Matchadet@prudential.co.th' },
+            { id: '004190', name: 'ธนาวัลย์ แก้วสะอาด (ปั๊ม)', zone: 'Ratchaburi', email: 'Thanawan.Kaewsa-ard@prudential.co.th' },
+            { id: '006594', name: 'วิกรมชนดล กุหลาบโชติ (อ๊อฟ)', zone: 'Ratchaburi', email: 'Wikomtanadol.Kulabchot@prudential.co.th' },
+            { id: '007163', name: 'กสิภัทร์ ภัทรรังสิมันต์ (ป๊อป)', zone: 'Ratchaburi', email: 'Kasipat.Pattararangsiman@prudential.co.th' },
+            { id: '005410', name: 'สรณัฐ พรนิคม (ฟิวซ์)', zone: 'Samut Sakhon', email: 'Soranat.Pornnikhom@prudential.co.th' },
+            { id: '006526', name: 'ชนานิศ เฉ่งสมบูรณ์ (โปรเต้)', zone: 'Samut Sakhon', email: 'Chananit.Chengsomboon@prudential.co.th' },
+            { id: '005600', name: 'ดวงใจ เจริญสุข (ปุ๊ก)', zone: 'Samut Sakhon', email: 'Doungjai.Charoensuk@prudential.co.th' },
+            { id: '006883', name: 'เสาวลักษณ์ ธิกานนท์ (เอส)', zone: 'Samut Sakhon', email: 'Saowalak.Thikanon@prudential.co.th' },
+            { id: '006490', name: 'ภูวนัตถ์ ดีศรีศักดิ์ (นัท)', zone: 'Samut Sakhon', email: 'Phoowanut.Deesrisak@prudential.co.th' },
+            { id: '005919', name: 'นฤมล ห้อยแก้ว (ติ๊ก)', zone: 'Samut Sakhon', email: 'Narumon.Hoykaew@prudential.co.th' },
+            { id: '002715', name: 'ทักษญา ยังปากน้ำ (โบว์)', zone: 'Suratthani', email: 'Thaksaya.Youngpaknum@prudential.co.th' },
+            { id: '008356', name: 'อัมราภรณ์ ไกรทอง (ชาลี)', zone: 'Suratthani', email: 'Amaraphorn.Kraithong@prudential.co.th' },
+            { id: '005109', name: 'โศศิษฐา แซ่แดง', zone: 'Suratthani', email: 'Sosittha.Saedaeng@prudential.co.th' },
+            { id: '005930', name: 'กาญจนา พัฒน์จันทร์ (ไผ่)', zone: 'Suratthani', email: 'Kanchana.Patchan@prudential.co.th' },
+            { id: '006105', name: 'อานนท์ ศรีวิชยางกูร (ต๊อบ)', zone: 'Suratthani', email: 'Arnon.Sriwitchayangkul@prudential.co.th' },
+            { id: '008514', name: 'ศศิโสม เมืองนาโพธิ์ (ซี)', zone: 'Suratthani', email: 'Sasisome.Muangnapo@prudential.co.th' }
+        ];
+
+        // --- 25 QUESTIONS ---
+        const QUESTIONS_DB = [
+            { id: 1, type: 'ab', topic: "1. การอธิบาย Index ให้เข้าใจง่าย", optA: "US Multi Asset คือ Index ที่มีโครงสร้างการลงทุนที่ใช้ AI ในการวิเคราะห์และพยากรณ์เศรษฐกิจอเมริกาและจีนและล่วงหน้า เพื่อคาดการณ์ GDP และ เงินเฟ้อ (CPI) แล้วใช้ AI ในการบริหาร จัดพอร์ตการลงทุนที่เหมาะสม เพื่อที่จะสร้างผลตอบแทนสูงๆให้กับลูกค้า บนความเสี่ยงต่ำ ๆ โดยถูกออกแบบมาในรูปแบบประกัน เพื่อที่จะการันตีเงินต้นได้", optB: "US Multi Asset คือ Index ที่มีโครงสร้างการลงทุนที่ใช้ AI ในการวิเคราะห์และพยากรณ์เศรษฐกิจอเมริกาและยุโรปล่วงหน้า เพื่อคาดการณ์ GDP และ เงินเฟ้อ (CPI) แล้วใช้ AI ในการบริหาร จัดพอร์ตการลงทุนที่เหมาะสม เพื่อที่จะสร้างผลตอบแทนสูงๆให้กับลูกค้า บนความเสี่ยงต่ำ ๆ โดยถูกออกแบบมาในรูปแบบประกัน เพื่อที่จะการันตีเงินต้นได้", correct: "A", explanation: "พยากรณ์เศรษฐกิจ 'อเมริกาและจีน' (ไม่มียุโรป)" },
+            { id: 2, type: 'ab', topic: "2. ประวัติและความสำเร็จของ QuantCube", optA: "บริษัทก่อตั้งเมื่อเดือนกรกฎาคม 2013 ที่ประเทศฝรั่งเศส โดยผู้ประกอบการ 2 คนที่เน้นใช้ AI และ Big Data เพื่อวิเคราะห์ข้อมูลทางเลือก (Alternative Data) เช่น ภาพถ่ายดาวเทียม และข้อมูลโซเชียลมีเดีย เพื่อพยากรณ์ตัวเลขเศรษฐกิจแบบเรียลไทม์", optB: "บริษัทก่อตั้งเมื่อเดือนกรกฎาคม 2013 ที่ประเทศสหรัฐอเมริกา โดยผู้ประกอบการ 2 คนที่เน้นใช้ AI และ Big Data เพื่อวิเคราะห์ข้อมูลทางเลือก (Alternative Data) เช่น ภาพถ่ายดาวเทียม และข้อมูลโซเชียลมีเดีย เพื่อพยากรณ์ตัวเลขเศรษฐกิจแบบเรียลไทม์", correct: "A", explanation: "ก่อตั้งที่ 'ประเทศฝรั่งเศส' (ไม่ใช่สหรัฐอเมริกา)" },
+            { id: 3, type: 'ab', topic: "3. ทำไม Citi ถึงมั่นใจและเลือกใช้ QuantCube", optA: "เพราะ QC ใช้ AI ขั้นสูงในการคาดการณ์ตัวเลขเศรษฐกิจสหรัฐฯ (GDP และเงินเฟ้อ) ได้แบบรายวัน ซึ่งเร็วกว่าประกาศของทางการมากสุดถึง 3 เดือนทำให้เห็นแนวโน้มตลาดก่อนใคร", optB: "เพราะ QC ใช้ AI ขั้นสูงในการคาดการณ์ตัวเลขเศรษฐกิจสหรัฐฯ (GDP และเงินเฟ้อ) ได้แบบรายวัน ซึ่งเร็วกว่าประกาศของทางการมากสุดถึง 3 สัปดาห์ทำให้เห็นแนวโน้มตลาดก่อนใคร", correct: "A", explanation: "เร็วกว่าทางการมากสุดถึง '3 เดือน'" },
+            { id: 4, type: 'ab', topic: "4. สถาบันอื่นที่ใช้บริการ QuantCube", optA: "มีสถาบันการเงินหลายแห่งที่ใช้บริการ QuantCube เช่น Allianz Global investors, Bank of America, Goldman Sachs, Moody's, The Word Bank, BNP Paribas, Societe Generale, Mizuho และ Hedge Funds ระดับชั้นนำกว่า 40 แห่ง", optB: "มีสถาบันการเงินหลายแห่งที่ใช้บริการ QuantCube เช่น Allianz Global investors, JP Morgan, Goldman Sachs, Moody's, The Word Bank, BNP Paribas, Societe Generale, Mizuho และ Hedge Funds ระดับชั้นนำกว่า 40 แห่ง", correct: "A", explanation: "ในรายชื่อตามเอกสารไม่มี JP Morgan แต่มี Bank of America" },
+            { id: 5, type: 'ab', topic: "5. จุดเด่นและการทำงานของ Index", optA: "การใช้ AI ประมวลผลข้อมูลมหาศาล (Big Data) เพื่อระบุภาวะเศรษฐกิจใน \"ปัจจุบัน\" ทันที (Al-driven Nowcasting) ไม่ต้องรอรายงานย้อนหลัง", optB: "การใช้ AI ประมวลผลข้อมูลมหาศาล (Big Data) เพื่อระบุภาวะเศรษฐกิจใน \"อนาคต\" ล่วงหน้า (Al-driven Forecasting) ไม่ต้องรอรายงานย้อนหลัง", correct: "A", explanation: "ระบบระบุภาวะเศรษฐกิจใน 'ปัจจุบัน' ทันที (Nowcasting)" },
+            { id: 6, type: 'ab', topic: "6. ปัจจัยที่ถูกนำมาวิเคราะห์และความแม่นยำ", optA: "ในอดีต ข้อมูลของ QC มีความสัมพันธ์ (Correlation) กับ เงินเฟ้อสหรัฐฯ (CPI) ถึง 99% และ GDP สหรัฐฯ 95% และรู้ล่วงหน้าก่อนประกาศจริงประมาณ 1-2 สัปดาห์ (สำหรับ CPI)", optB: "ในอดีต ข้อมูลของ QC มีความสัมพันธ์ (Correlation) กับ เงินเฟ้อสหรัฐฯ (CPI) ถึง 95% และ GDP สหรัฐฯ 99% และรู้ล่วงหน้าก่อนประกาศจริงประมาณ 1-2 สัปดาห์ (สำหรับ CPI)", correct: "A", explanation: "CPI คือ 99% และ GDP คือ 95%" },
+            { id: 7, type: 'ab', topic: "7. ผลตอบแทนในอดีต (Performance)", optA: "ให้ผลตอบแทนเฉลี่ย 9.21% ต่อปี (ข้อมูลย้อนหลัง พ.ย 2016- ม.ค. 2026) โดยมีความผันผวน 7.4% และค่า Sharpe Ratio (ผลตอบแทนต่อความเสี่ยง) 1.25", optB: "ให้ผลตอบแทนเฉลี่ย 9.21% ต่อปี (ข้อมูลย้อนหลัง พ.ย 2016- ม.ค. 2026) โดยมีความผันผวน 7.4% และค่า Sharpe Ratio (ผลตอบแทนต่อความเสี่ยง) 1.52", correct: "A", explanation: "ค่า Sharpe Ratio ที่ระบุคือ 1.25" },
+            { id: 8, type: 'ab', topic: "8. เปรียบเทียบกับดัชนีอื่นในช่วงวิกฤต", optA: "โมเดลตรวจจับสัญญาณ \"เศรษฐกิจชะลอตัว (Slow Growth)\" ได้ล่วงหน้า 3 เดือน จึงสั่งขายหุ้นทิ้งและย้ายเงินไปถือพันธบัตรสหรัฐฯ, ทองคำ และเงินดอลลาร์", optB: "โมเดลตรวจจับสัญญาณ \"เศรษฐกิจชะลอตัว (Slow Growth)\" ได้ล่วงหน้า 3 เดือน จึงสั่งขายหุ้นทิ้งและย้ายเงินไปถือพันธบัตรสหรัฐฯ, ทองคำ และเงินเยน", correct: "A", explanation: "ย้ายเงินไปถือพันธบัตรสหรัฐฯ, ทองคำ และ 'เงินดอลลาร์'" },
+            { id: 9, type: 'ab', topic: "9. สัดส่วนการลงทุน (Portfolio Weights)", optA: "Stagflation (เศรษฐกิจฝืดเคือง): GDP ชะลอตัว + เงินเฟ้อสูง -> เน้นเงินสด, สินค้าโภคภัณฑ์ (น้ำมัน, ทองแดง)", optB: "Stagflation (เศรษฐกิจฝืดเคือง): GDP ชะลอตัว + เงินเฟ้อสูง -> เน้นพันธบัตร, สินค้าโภคภัณฑ์ (น้ำมัน, ทองแดง)", correct: "A", explanation: "ในภาวะ Stagflation เน้น 'เงินสด'" },
+            { id: 10, type: 'ab', topic: "10. ความถี่ในการเปลี่ยนสภาวะเศรษฐกิจ", optA: "ระบบกำหนดว่าจะเปลี่ยน Regime ก็ต่อเมื่อสัญญาณนิ่งต่อเนื่องกัน 3 วัน ถ้าเศรษฐกิจไม่เปลี่ยน จะปรับพอร์ตกลับสู่สัดส่วนมาตรฐานเดือนละครั้ง แต่การปรับเพื่อคุมความเสี่ยง (Volatility Targeting) จะทำทุกวัน", optB: "ระบบกำหนดว่าจะเปลี่ยน Regime ก็ต่อเมื่อสัญญาณนิ่งต่อเนื่องกัน 3 วัน ถ้าเศรษฐกิจไม่เปลี่ยน จะปรับพอร์ตกลับสู่สัดส่วนมาตรฐานทุกวัน แต่การปรับเพื่อคุมความเสี่ยง (Volatility Targeting) จะทำเดือนละครั้ง", correct: "A", explanation: "สัดส่วนมาตรฐานทำเดือนละครั้ง, คุมความเสี่ยงทำทุกวัน" },
+            { id: 11, type: 'interactive', topic: "11. เปรียบเทียบ US Multi Asset กับ Global index", text: "US Multi Asset ยอมรับความผันผวนได้สูงกว่าที่ {DROP1} และรับประกันอายุ {DROP2} ในขณะที่ Global Index เน้นความผันผวนไม่เกิน 5% และรับประกันอายุถึง 70 ปี", options1: ["8% และมี Decrement ที่ 2%", "5% และมี Decrement ที่ 2%"], options2: ["1 เดือน - 75 ปี", "1 เดือน - 70 ปี"], correct1: "8% และมี Decrement ที่ 2%", correct2: "1 เดือน - 75 ปี", explanation: "US Multi Asset ผันผวนได้ 8% และรับประกันอายุสูงสุดถึง 75 ปี" },
+            { id: 12, type: 'ab', topic: "12. Participation Rate 260% ทำได้อย่างไร", optA: "การที่บริษัทสามารถเสนอ Participation Rate ในระดับสูงนี้ได้ เป็นผลจากการใช้ตราสารอนุพันธ์เพื่อบริหารจัดการภาระผูกพันกับลูกค้า โดยมีการจัดสรรโครงสร้างตราสารอนุพันธ์ให้ช่วยลดต้นทุนรวมของผลิตภัณฑ์ได้", optB: "การที่บริษัทสามารถเสนอ Participation Rate ในระดับสูงนี้ได้ เป็นผลจากการนำเงินเบี้ยประกันส่วนใหญ่ไปซื้อหุ้นในดัชนีแบบทวีคูณ (Leverage) โดยมีการจัดสรรโครงสร้างให้ช่วยลดต้นทุนรวมของผลิตภัณฑ์ได้", correct: "A", explanation: "ทำได้จากการใช้ 'ตราสารอนุพันธ์' ไม่ใช่การซื้อหุ้น Leverage" },
+            { id: 13, type: 'ab', topic: "13. กรณี AI ระบบล่ม", optA: "มีระบบ (Rule based) ที่ป้องกัน Error คือ 3-Day confirmation สมมุติ AI ได้รับข้อมูลที่เพี้ยนเข้ามา 1 วัน แล้วสั่งให้เปลี่ยนพอร์ตระบบจะยังไม่ทำ ระบบจะรอเช็คซ้ำอีก 2 วัน", optB: "มีระบบ (AI backup) ที่ป้องกัน Error คือ 3-Day confirmation สมมุติ AI ได้รับข้อมูลที่เพี้ยนเข้ามา 1 วัน แล้วสั่งให้เปลี่ยนพอร์ตระบบจะยังไม่ทำ ระบบจะรอเช็คซ้ำอีก 2 วัน", correct: "A", explanation: "กลไกป้องกัน Error คือระบบ 'Rule based'" },
+            { id: 14, type: 'ab', topic: "14. จะติดตามผลการดำเนินงานได้อย่างไร", optA: "สามารถตรวจสอบได้ทางเว็บไซต์ของบริษัทประกัน (จะเห็นผลการดำเนินงานในช่วงสิ้นเดือนกุมภาพันธ์ 2569)", optB: "สามารถตรวจสอบได้ทางเว็บไซต์ของบริษัทประกัน (จะเห็นผลการดำเนินงานในช่วงสิ้นเดือนมกราคม 2569)", correct: "A", explanation: "จะเห็นผลการดำเนินงานในช่วงสิ้นเดือนกุมภาพันธ์ 2569" },
+            { id: 15, type: 'ab', topic: "15. Ticker ใน Bloomberg", optA: "Ticker: CIMARA82", optB: "Ticker: CIMARA28", correct: "A", explanation: "Ticker ที่ถูกต้องคือ CIMARA82" },
+            { id: 16, type: 'interactive', topic: "16. สูตรคำนวณเงินปันผลเมื่อครบกำหนดสัญญา", text: "ส่วนสุดท้ายของสูตรคือการนำไปคูณกับ: Max(0, [ {DROP1} ] - 100%)", options1: ["ระดับดัชนี ณ วันคำนวณมูลค่าวันสุดท้าย / ระดับดัชนี ณ วันคำนวณมูลค่าวันแรก", "ระดับดัชนี ณ วันคำนวณมูลค่าวันแรก / ระดับดัชนี ณ วันคำนวณมูลค่าวันสุดท้าย"], correct1: "ระดับดัชนี ณ วันคำนวณมูลค่าวันสุดท้าย / ระดับดัชนี ณ วันคำนวณมูลค่าวันแรก", explanation: "ตามสูตร ต้องเอา (ระดับดัชนีวันสุดท้าย หารด้วย ระดับดัชนีวันแรก) ลบ 100%" },
+            { id: 17, type: 'interactive', topic: "17. IRR ตัวอย่างในแต่ละผลตอบแทน", text: "เพศชาย อายุ 40 ปี ทุน 1 ล้านบาท (มีส่วนลดเบี้ย) หากผลตอบแทนตามดัชนีอ้างอิงเป็น 4% จะได้ IRR {DROP1} แต่ถ้าทุน 50,000 บาท จะได้ IRR {DROP2}", options1: ["9.10%", "9.03%"], options2: ["9.03%", "9.10%"], correct1: "9.10%", correct2: "9.03%", explanation: "ทุน 1 ล้านบาท ได้ IRR 9.10% ส่วนทุน 50,000 บาท ได้ IRR 9.03%" },
+            { id: 18, type: 'ab', topic: "18. บริษัทประกันจะได้กำไรอย่างไร", optA: "บริษัทจะนำเงินที่ลูกค้าจ่ายเบี้ยประกันหลังหักค่าใช้จ่ายต่างๆ ไปลงทุนเพื่อสร้างผลกำไร และมีการบริหารความเสี่ยงจากการลงทุนในดัชนี เพื่อให้แน่ใจว่าสามารถจ่ายผลประโยชน์ที่การันตีได้", optB: "บริษัทจะนำเงินที่ลูกค้าจ่ายเบี้ยประกันทั้งหมด ไปลงทุนเพื่อสร้างผลกำไร และมีการบริหารความเสี่ยงจากการลงทุนในดัชนี เพื่อให้แน่ใจว่าสามารถจ่ายผลประโยชน์ที่การันตีได้", correct: "A", explanation: "บริษัทนำเงินไปลงทุน 'หลังหักค่าใช้จ่ายต่างๆ' แล้ว" },
+            { id: 19, type: 'ab', topic: "19. ความเสี่ยงการลงทุนในทองคำ", optA: "AI จะเลือกถือทองคำเฉพาะในช่วงเศรฐกิจชะลอตัว (Slow growth) เท่านั้น และมีการกระจายความเสี่ยงโดยการถือคู่กับพันธบัตรรัฐบาลเพื่อเน้นรักษาเงินต้นให้ปลอดภัย", optB: "AI จะเลือกถือทองคำเฉพาะในช่วงเศรฐกิจฝืดเคือง (Stagflation) เท่านั้น และมีการกระจายความเสี่ยงโดยการถือคู่กับพันธบัตรรัฐบาลเพื่อเน้นรักษาเงินต้นให้ปลอดภัย", correct: "A", explanation: "ถือทองคำเฉพาะช่วง 'Slow growth'" },
+            { id: 20, type: 'ab', topic: "20. ความเสี่ยงจากอัตราแลกเปลี่ยน", optA: "ผลิตภัณฑ์นี้มีความเสี่ยงจากอัตราแลกเปลี่ยน แต่มีผลกระทบจำกัดเฉพาะในส่วนเงินปันผลที่ลูกค้าจะได้รับ เงินต้นของลูกค้ายังคงปลอดภัย 100%", optB: "ผลิตภัณฑ์นี้มีความเสี่ยงจากอัตราแลกเปลี่ยน ซึ่งส่งผลกระทบทั้งในส่วนเงินปันผลและเงินต้นของลูกค้าที่อาจปรับลดลงได้ไม่เกิน 2%", correct: "A", explanation: "กระทบเฉพาะเงินปันผล เงินต้นปลอดภัย 100%" },
+            { id: 21, type: 'ab', topic: "21. ถ้าบริษัท Citi หรือ QuantCube ปิดไป", optA: "หากบริษัทไม่สามารถหาดัชนีใหม่มาทดแทนตามวรรคข้างต้นได้ บริษัทจะทำการชำระเป็นเงินสดตามมูลค่าผลประโยชน์ตามสัญญาอ้างอิงดัชนีที่บริษัทได้รับจากการยกเลิกการคำนวณดัชนีอ้างอิงข้างต้น", optB: "หากบริษัทไม่สามารถหาดัชนีใหม่มาทดแทนตามวรรคข้างต้นได้ บริษัทจะทำการโอนย้ายเงินลงทุนไปใน Global Index แทนตามมูลค่าผลประโยชน์ตามสัญญาอ้างอิงดัชนีที่บริษัทได้รับจากการยกเลิก", correct: "A", explanation: "เงื่อนไขระบุชัดเจนว่า 'ชำระเป็นเงินสด'" },
+            { id: 22, type: 'ab', topic: "22. อัตราการมีส่วนร่วม 260% การันตีหรือไม่", optA: "ผู้เอาประกันภัยจะได้รับผลตอบแทนจากการปรับขึ้นของสินทรัพย์อ้างอิงในอัตรา 260% (2.6 เท่า) ของผลตอบแทนดัชนีอ้างอิง ตามเงื่อนไขของผลิตภัณฑ์ โดยผู้เอาประกันสามารถศึกษาสูตรการคำนวณผลตอบแทนตามดัชนีอ้างอิงเมื่อครบกำหนดสัญญาได้", optB: "ผู้เอาประกันภัยจะได้รับการันตีผลตอบแทนขั้นต่ำจากการปรับขึ้นของสินทรัพย์อ้างอิงในอัตรา 260% (2.6 เท่า) ของเงินต้น ตามเงื่อนไขของผลิตภัณฑ์", correct: "A", explanation: "PR 260% คือสัดส่วนการคูณจากดัชนี ไม่ใช่การันตี 260% ของเงินต้น" },
+            { id: 23, type: 'ab', topic: "23. หากเกิดสงครามโลกครั้งที่ 3", optA: "ผลิตภัณฑ์ตัวนี้เป็นผลิตภัณฑ์ประกันชีวิต ซึ่งหากเกิดเหตุการณ์ความผันผวนทางเศรษฐกิจ อย่างน้อยเงินต้นของลูกค้าก็จะไม่กระทบไปด้วย (เงินต้นไม่หาย) และยังคงได้รับความคุ้มครองชีวิตตามสัญญากรมธรรม์", optB: "ผลิตภัณฑ์ตัวนี้เป็นผลิตภัณฑ์กองทุนรวม ซึ่งหากเกิดเหตุการณ์ความผันผวนทางเศรษฐกิจ อย่างน้อยเงินต้นของลูกค้าก็จะไม่กระทบไปด้วย (เงินต้นไม่หาย) และยังคงได้รับสิทธิในการเวนคืนทันที", correct: "A", explanation: "เป็นผลิตภัณฑ์ 'ประกันชีวิต' และคุ้มครองชีวิตตามสัญญา" },
+            { id: 24, type: 'ab', topic: "24. การบริหารดัชนีตลอด 15 ปี", optA: "การบริหารดัชนีนี้ มีทีมผู้เชี่ยวชาญภายในของCiti (Citi Researchers) ที่มีการติดตาม และทบทวนสัดส่วนการลงทุนอย่างสม่ำเสมอ เพื่อให้สอดคล้องกับสภาวะเศรษฐกิจที่เปลี่ยนแปลงไป", optB: "การบริหารดัชนีนี้ มีทีมผู้เชี่ยวชาญภายในของQuantCube (QC Researchers) ที่มีการติดตาม และทบทวนสัดส่วนการลงทุนอย่างสม่ำเสมอ เพื่อให้สอดคล้องกับสภาวะเศรษฐกิจที่เปลี่ยนแปลงไป", correct: "A", explanation: "เป็นทีมผู้เชี่ยวชาญของ 'Citi (Citi Researchers)'" },
+            { id: 25, type: 'ab', topic: "25. สาเหตุที่ผลตอบแทนต่ำปี 2024-2025", optA: "ปี 2024 เป็นปีที่ตลาดผันผวนแรงจากเหตุการณ์เซอร์ไพรส์หลายเรื่อง ได้แก่ ธนาคารกลางญี่ปุ่น (BOJ) ขึ้นดอกเบี้ยแบบไม่คาดคิด ทำให้เงินเยนแข็งค่าเร็ว ส่งผลกระทบต่อกลยุทธ์ค่าเงิน", optB: "ปี 2024 เป็นปีที่ตลาดผันผวนแรงจากเหตุการณ์เซอร์ไพรส์หลายเรื่อง ได้แก่ ธนาคารกลางสหรัฐฯ (Fed) ลดดอกเบี้ยแบบไม่คาดคิด ทำให้เงินดอลลาร์อ่อนค่าเร็ว ส่งผลกระทบต่อกลยุทธ์ค่าเงิน", correct: "A", explanation: "สาเหตุคือธนาคารกลางญี่ปุ่น (BOJ) 'ขึ้น' ดอกเบี้ย" }
+        ];
+
+        function App() {
+            const [employees, setEmployees] = useState(INITIAL_EMPLOYEES);
+            
+            const [step, setStep] = useState('login'); 
+            const [loginId, setLoginId] = useState('');
+            const [loginError, setLoginError] = useState('');
+            
+            const [tempUser, setTempUser] = useState(null); 
+            const [user, setUser] = useState(null); 
+            
+            const [regForm, setRegForm] = useState({ id: '', name: '', zone: '', email: '' });
+            
+            const [questions, setQuestions] = useState([]);
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [score, setScore] = useState(0);
+            const [timer, setTimer] = useState(0);
+            const [intervalId, setIntervalId] = useState(null);
+            const [logs, setLogs] = useState([]);
+            const [showFeedback, setShowFeedback] = useState(false);
+            const [selectedOpt, setSelectedOpt] = useState(null);
+            const [attemptCount, setAttemptCount] = useState(1);
+            const [isSendingEmail, setIsSendingEmail] = useState(false);
+
+            // ==========================================
+            // SUPABASE API CALLS (ตารางแยกเฉพาะระบบนี้)
+            // ==========================================
+            const saveEmployeeToSupabase = async (employeeData) => {
+                try {
+                    await supabase.from('verify_employees').upsert([{
+                        id: employeeData.id,
+                        name: employeeData.name,
+                        zone: employeeData.zone,
+                        email: employeeData.email
+                    }]);
+                    console.log("บันทึกพนักงานใหม่ลง Supabase สำเร็จ");
+                } catch (err) {
+                    console.error('Supabase Error:', err);
+                }
+            };
+
+            const saveResultToSupabase = async (resultData) => {
+                try {
+                    await supabase.from('verify_results').insert([resultData]);
+                    console.log("บันทึกผลสอบลง Supabase สำเร็จ");
+                } catch (err) {
+                    console.error('Supabase Error:', err);
+                }
+            };
+
+            const initQuestions = () => {
+                const preparedQuestions = QUESTIONS_DB.map(q => {
+                    if (q.type === 'ab') {
+                        const isAFirst = Math.random() > 0.5;
+                        return {
+                            ...q,
+                            displayOpts: isAFirst 
+                                ? [{ label: 'A', text: q.optA, isCorrect: q.correct === 'A' }, { label: 'B', text: q.optB, isCorrect: q.correct === 'B' }]
+                                : [{ label: 'A', text: q.optB, isCorrect: q.correct === 'B' }, { label: 'B', text: q.optA, isCorrect: q.correct === 'A' }]
+                        };
+                    }
+                    return q; 
+                });
+                setQuestions(preparedQuestions);
+            };
+
+            useEffect(() => { initQuestions(); }, []);
+
+            useEffect(() => {
+                if (step === 'quiz' && !showFeedback) {
+                    const id = setInterval(() => setTimer(t => t + 1), 1000);
+                    setIntervalId(id);
+                    return () => clearInterval(id);
+                }
+            }, [step, showFeedback]);
+
+            // --- HANDLERS ---
+            const handleLogin = (e) => {
+                e.preventDefault();
+                setLoginError('');
+                const foundUser = employees.find(emp => emp.id === loginId.trim());
+                if (foundUser) {
+                    setTempUser(foundUser);
+                    setStep('confirm');
+                } else {
+                    setStep('notfound');
+                }
+            };
+
+            const handleRegister = async (e) => {
+                e.preventDefault();
+                const newUser = { ...regForm };
+                setEmployees([...employees, newUser]);
+                setTempUser(newUser);
+                
+                await saveEmployeeToSupabase(newUser);
+                setStep('confirm');
+            };
+
+            const confirmUser = () => {
+                setUser(tempUser);
+                setStep('intro');
+            };
+
+            const startQuiz = () => {
+                setStep('quiz');
+                setTimer(0);
+            };
+
+            const handleABAnswer = (option) => {
+                clearInterval(intervalId);
+                setSelectedOpt(option);
+                processAnswerResult(option.isCorrect);
+            };
+
+            const handleInteractiveAnswer = (ans1, ans2) => {
+                clearInterval(intervalId);
+                const q = questions[currentIndex];
+                let isCorrect = q.options2 ? (ans1 === q.correct1 && ans2 === q.correct2) : (ans1 === q.correct1);
+                processAnswerResult(isCorrect);
+            };
+
+            const processAnswerResult = (isCorrect) => {
+                if (isCorrect) setScore(s => s + 1);
+                setLogs([...logs, {
+                    questionId: questions[currentIndex].id,
+                    topic: questions[currentIndex].topic,
+                    timeSpent: timer,
+                    isCorrect: isCorrect,
+                }]);
+                setShowFeedback(true);
+            };
+
+            const nextQuestion = async () => {
+                setShowFeedback(false);
+                setSelectedOpt(null);
+                setTimer(0);
+                if (currentIndex + 1 < questions.length) {
+                    setCurrentIndex(currentIndex + 1);
+                } else {
+                    const totalTime = logs.reduce((acc, log) => acc + log.timeSpent, 0) + timer;
+                    const finalScore = score + (logs[logs.length-1]?.isCorrect ? 1 : 0);
+                    
+                    await saveResultToSupabase({
+                        emp_id: user.id,
+                        name: user.name,
+                        zone: user.zone,
+                        score: finalScore,
+                        time_spent: totalTime,
+                        attempt: attemptCount,
+                        is_passed: finalScore === 25
+                    });
+                    
+                    setStep('result');
+                }
+            };
+
+            const handleRetry = () => {
+                initQuestions();
+                setCurrentIndex(0);
+                setScore(0);
+                setLogs([]);
+                setAttemptCount(c => c + 1);
+                setStep('quiz');
+            };
+
+            const handleIssueCertificate = () => {
+                setIsSendingEmail(true);
+                setTimeout(() => {
+                    setIsSendingEmail(false);
+                    setStep('certificate');
+                }, 3000);
+            };
+
+            const formatTime = (seconds) => {
+                const m = Math.floor(seconds / 60);
+                const s = seconds % 60;
+                return `${m > 0 ? `${m}m ` : ''}${s}s`;
+            };
+
+            const isPassed = score === questions.length;
+
+            // --- UI RENDERS ---
+            if (step === 'login') {
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center p-4 font-sans">
+                        <div className="bg-white max-w-md w-full rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+                            <div className="bg-[#0f172a] p-8 text-white text-center">
+                                <Icons.ShieldCheck className="w-16 h-16 mx-auto mb-4 text-sky-400" />
+                                <h2 className="text-2xl font-bold">Knowledge Verification</h2>
+                                <p className="text-slate-300 text-sm mt-2">US Multi-Asset Index</p>
+                            </div>
+                            <form onSubmit={handleLogin} className="p-8 space-y-6">
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">รหัสพนักงาน (Employee ID)</label>
+                                    <div className="relative">
+                                        <Icons.Briefcase className="absolute left-3.5 top-3.5 w-5 h-5 text-slate-400" />
+                                        <input required type="text" value={loginId} onChange={e => setLoginId(e.target.value)}
+                                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 font-mono text-lg transition-all outline-none" placeholder="ระบุรหัสพนักงาน..." />
+                                    </div>
+                                </div>
+                                <button type="submit" className="w-full bg-[#0ea5e9] hover:bg-[#0284c7] text-white font-bold py-3.5 rounded-lg shadow-md transition-colors flex items-center justify-center">
+                                    เข้าสู่ระบบ <Icons.ChevronRight className="ml-2 w-5 h-5" />
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (step === 'notfound') {
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+                        <div className="bg-white max-w-md w-full rounded-2xl shadow-xl p-8 text-center border border-slate-200">
+                            <Icons.XCircle className="w-16 h-16 mx-auto mb-4 text-rose-500" />
+                            <h2 className="text-2xl font-bold text-slate-800 mb-2">ไม่พบข้อมูลในระบบ</h2>
+                            <p className="text-slate-600 mb-8">รหัสพนักงาน {loginId} ไม่มีในฐานข้อมูล ท่านต้องการลงทะเบียนใหม่หรือไม่?</p>
+                            <div className="space-y-4">
+                                <button onClick={() => setStep('register')} className="w-full bg-[#0f172a] text-white font-bold py-3.5 rounded-lg shadow-md flex items-center justify-center">
+                                    <Icons.PlusCircle className="mr-2 w-5 h-5"/> ลงทะเบียนพนักงานใหม่
+                                </button>
+                                <button onClick={() => { setStep('login'); setLoginId(''); }} className="w-full bg-slate-100 text-slate-700 font-bold py-3.5 rounded-lg hover:bg-slate-200">
+                                    กลับไปกรอกรหัสใหม่
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (step === 'register') {
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+                        <div className="bg-white max-w-md w-full rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+                            <div className="bg-[#0f172a] p-6 text-white text-center">
+                                <h2 className="text-xl font-bold">ลงทะเบียนพนักงานใหม่</h2>
+                            </div>
+                            <form onSubmit={handleRegister} className="p-8 space-y-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1">รหัสพนักงาน</label>
+                                    <input required type="text" value={regForm.id} onChange={e => setRegForm({...regForm, id: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1">ชื่อ-นามสกุล (พร้อมชื่อเล่น)</label>
+                                    <input required type="text" value={regForm.name} onChange={e => setRegForm({...regForm, name: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1">สาขา / สังกัด (Zone)</label>
+                                    <input required type="text" value={regForm.zone} onChange={e => setRegForm({...regForm, zone: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1">อีเมลบริษัท</label>
+                                    <input required type="email" value={regForm.email} onChange={e => setRegForm({...regForm, email: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500" />
+                                </div>
+                                <button type="submit" className="w-full bg-[#0ea5e9] text-white font-bold py-3.5 rounded-lg mt-4 shadow-md">บันทึกลง Supabase และเข้าสู่ระบบ</button>
+                            </form>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (step === 'confirm') {
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+                        <div className="bg-white max-w-md w-full rounded-2xl shadow-xl p-8 text-center border border-slate-200">
+                            <div className="w-20 h-20 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <Icons.User className="w-10 h-10" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-slate-800 mb-1">ยืนยันตัวตน</h2>
+                            
+                            <div className="bg-slate-50 rounded-xl p-4 text-left border border-slate-200 mb-8 mt-4">
+                                <div className="mb-2"><span className="text-slate-400 text-sm">รหัสพนักงาน:</span> <span className="font-bold text-slate-800 float-right">{tempUser.id}</span></div>
+                                <div className="mb-2"><span className="text-slate-400 text-sm">ชื่อ-นามสกุล:</span> <span className="font-bold text-slate-800 float-right">{tempUser.name}</span></div>
+                                <div className="mb-2"><span className="text-slate-400 text-sm">สังกัด/โซน:</span> <span className="font-bold text-slate-800 float-right">{tempUser.zone}</span></div>
+                            </div>
+
+                            <button onClick={confirmUser} className="w-full bg-[#0f172a] text-white font-bold py-3.5 rounded-lg shadow-md mb-3 flex justify-center items-center">
+                                <Icons.CheckCircle className="mr-2 w-5 h-5"/> ยืนยัน (Confirm)
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (step === 'intro') {
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-4">
+                        <div className="bg-white max-w-3xl w-full rounded-2xl shadow-xl p-8 md:p-12 border border-slate-200">
+                            <h2 className="text-3xl font-extrabold text-[#0f172a] mb-6 border-b pb-4 flex items-center">
+                                <Icons.FileText className="mr-3 text-sky-500 w-8 h-8"/> กติกาการทดสอบ
+                            </h2>
+                            <div className="space-y-5 text-slate-600 text-lg mb-8">
+                                <p className="flex items-start"><Icons.Check className="w-6 h-6 text-sky-500 mr-3 shrink-0 mt-0.5" /> <span>ครอบคลุมเนื้อหา FAQ ทั้งหมด <strong>25 ข้อ</strong></span></p>
+                                <p className="flex items-start"><Icons.Check className="w-6 h-6 text-sky-500 mr-3 shrink-0 mt-0.5" /> <span>ข้อมูลในแบบทดสอบคัดลอกมาจากเอกสาร <strong>Word-by-Word 100%</strong></span></p>
+                                <p className="flex items-start bg-rose-50 p-5 rounded-xl border border-rose-200 text-rose-800 font-semibold shadow-sm">
+                                    <Icons.AlertTriangle className="w-6 h-6 text-rose-500 mr-3 shrink-0 mt-0.5" /> 
+                                    <span>เกณฑ์การผ่านคือ 100% (25/25) เท่านั้น หากผิดแม้แต่ข้อเดียว ต้องกลับมาเริ่มทำใหม่ทั้งหมด</span>
+                                </p>
+                            </div>
+                            <button onClick={startQuiz} className="w-full bg-[#0f172a] hover:bg-[#1e293b] text-white text-xl font-bold py-5 rounded-xl shadow-lg transition-transform hover:scale-105">
+                                เริ่มทำแบบทดสอบ (ครั้งที่ {attemptCount})
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (step === 'quiz') {
+                const currentQ = questions[currentIndex];
+                const progress = ((currentIndex) / questions.length) * 100;
+
+                const InteractiveQuestion = () => {
+                    const [sel1, setSel1] = useState('');
+                    const [sel2, setSel2] = useState('');
+
+                    const renderTextWithDropdowns = () => {
+                        let parts = currentQ.text.split('{DROP1}');
+                        let content = [];
+                        content.push(<span key="1">{parts[0]}</span>);
+                        content.push(
+                            <select key="d1" value={sel1} onChange={e => setSel1(e.target.value)} disabled={showFeedback} className="mx-2 p-2 border border-sky-400 rounded bg-sky-50 font-semibold text-sky-800 outline-none">
+                                <option value="">-- เลือกคำตอบ --</option>
+                                {currentQ.options1.map((o, i) => <option key={i} value={o}>{o}</option>)}
+                            </select>
+                        );
+                        if (currentQ.options2) {
+                            let parts2 = parts[1].split('{DROP2}');
+                            content.push(<span key="2">{parts2[0]}</span>);
+                            content.push(
+                                <select key="d2" value={sel2} onChange={e => setSel2(e.target.value)} disabled={showFeedback} className="mx-2 p-2 border border-sky-400 rounded bg-sky-50 font-semibold text-sky-800 outline-none">
+                                    <option value="">-- เลือกคำตอบ --</option>
+                                    {currentQ.options2.map((o, i) => <option key={i} value={o}>{o}</option>)}
+                                </select>
+                            );
+                            content.push(<span key="3">{parts2[1]}</span>);
+                        } else {
+                            content.push(<span key="2">{parts[1]}</span>);
+                        }
+                        return content;
+                    };
+
+                    const isReady = currentQ.options2 ? (sel1 && sel2) : sel1;
+
+                    return (
+                        <div className="p-8 bg-white text-xl leading-relaxed text-slate-700">
+                            <p className="mb-8">{renderTextWithDropdowns()}</p>
+                            {!showFeedback && (
+                                <button 
+                                    disabled={!isReady}
+                                    onClick={() => handleInteractiveAnswer(sel1, sel2)} 
+                                    className={`px-8 py-3 rounded-lg font-bold text-white transition-all ${isReady ? 'bg-sky-600 hover:bg-sky-700 shadow-md' : 'bg-slate-300 cursor-not-allowed'}`}>
+                                    ยืนยันคำตอบ
+                                </button>
+                            )}
+                        </div>
+                    );
+                };
+
+                return (
+                    <div className="min-h-screen bg-slate-50 p-4 md:p-8 flex flex-col items-center">
+                        <div className="max-w-4xl w-full mb-6 mt-4">
+                            <div className="flex justify-between items-end mb-2">
+                                <div className="text-xl font-bold text-slate-800">ข้อที่ {currentIndex + 1} <span className="text-slate-400 text-base font-medium">/ {questions.length}</span></div>
+                                <div className="flex items-center text-slate-600 bg-white px-4 py-1.5 rounded-lg shadow-sm font-mono border border-slate-200">
+                                    <Icons.Clock className="w-4 h-4 mr-2 text-sky-500" /> {formatTime(timer)}
+                                </div>
+                            </div>
+                            <div className="w-full bg-slate-200 rounded-full h-2">
+                                <div className="bg-[#0ea5e9] h-2 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                            </div>
+                        </div>
+
+                        <div className="max-w-4xl w-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+                            <div className="bg-[#0f172a] p-6 md:p-8">
+                                <h3 className="text-2xl font-bold text-white leading-tight">{currentQ.topic}</h3>
+                            </div>
+                            
+                            {currentQ.type === 'ab' ? (
+                                <div className="p-6 md:p-8 grid md:grid-cols-2 gap-6 bg-slate-50 relative">
+                                    {currentQ.displayOpts.map((opt, idx) => {
+                                        const isSelected = selectedOpt === opt;
+                                        let cardClass = "p-6 rounded-xl border-2 cursor-pointer transition-all flex items-start flex-col ";
+                                        if (!showFeedback) {
+                                            cardClass += "border-slate-200 bg-white hover:border-sky-400 hover:shadow-md";
+                                        } else {
+                                            cardClass += "cursor-default ";
+                                            if (opt.isCorrect) cardClass += isSelected ? "border-emerald-500 bg-emerald-50" : "border-emerald-400 bg-white";
+                                            else cardClass += isSelected ? "border-rose-500 bg-rose-50" : "border-slate-200 opacity-40 bg-white";
+                                        }
+
+                                        return (
+                                            <div key={idx} onClick={() => !showFeedback && handleABAnswer(opt)} className={cardClass}>
+                                                <div className={`shrink-0 px-3 py-1 rounded text-sm font-bold mb-3 transition-colors ${showFeedback && opt.isCorrect ? 'bg-emerald-500 text-white' : showFeedback && isSelected && !opt.isCorrect ? 'bg-rose-500 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                                                    ตัวเลือก {idx === 0 ? 'A' : 'B'}
+                                                </div>
+                                                <div className={`text-lg leading-relaxed ${showFeedback && isSelected && !opt.isCorrect ? 'text-rose-900' : 'text-slate-700'}`}>
+                                                    {opt.text}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <InteractiveQuestion />
+                            )}
+                        </div>
+
+                        {showFeedback && (
+                            <div className={`max-w-4xl w-full rounded-2xl p-6 md:p-8 border-l-8 shadow-md flex flex-col md:flex-row items-center justify-between animate-fade-in-up
+                                ${logs[logs.length-1].isCorrect ? 'bg-emerald-50 border-emerald-500' : 'bg-rose-50 border-rose-500'}`}>
+                                <div className="flex-1 mb-6 md:mb-0 md:mr-8">
+                                    <h4 className={`text-xl font-bold flex items-center mb-2 ${logs[logs.length-1].isCorrect ? 'text-emerald-700' : 'text-rose-700'}`}>
+                                        {logs[logs.length-1].isCorrect ? <Icons.CheckCircle className="w-6 h-6 mr-2" /> : <Icons.AlertTriangle className="w-6 h-6 mr-2" />}
+                                        {logs[logs.length-1].isCorrect ? 'ถูกต้อง!' : 'ผิดพลาด!'}
+                                    </h4>
+                                    <p className="text-slate-700 text-lg"><strong>คำอธิบาย/ข้อเท็จจริง:</strong> {currentQ.explanation}</p>
+                                </div>
+                                <button onClick={nextQuestion} className={`shrink-0 px-8 py-4 rounded-xl font-bold text-white shadow-md flex items-center transition-transform hover:scale-105
+                                    ${logs[logs.length-1].isCorrect ? 'bg-emerald-600' : 'bg-[#0f172a]'}`}>
+                                    {currentIndex + 1 === questions.length ? 'ดูผลสรุปและส่งบันทึก Supabase' : 'ไปข้อถัดไป'} <Icons.ChevronRight className="ml-2 w-5 h-5" />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            if (step === 'result') {
+                const totalTime = logs.reduce((acc, log) => acc + log.timeSpent, 0);
+
+                return (
+                    <div className="min-h-screen flex flex-col items-center p-4 md:p-8">
+                        {isSendingEmail ? (
+                            <div className="flex flex-col items-center justify-center h-[70vh]">
+                                <div className="w-20 h-20 border-4 border-slate-200 border-t-sky-500 rounded-full animate-spin mb-6"></div>
+                                <h2 className="text-3xl font-bold text-slate-800">กำลังประมวลผลข้อมูลลง Supabase...</h2>
+                            </div>
+                        ) : (
+                            <div className="max-w-4xl w-full space-y-6">
+                                <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+                                    <div className={`p-12 text-center text-white ${isPassed ? 'bg-emerald-600' : 'bg-rose-600'}`}>
+                                        {isPassed ? <Icons.Award className="w-24 h-24 mx-auto mb-6 text-emerald-200" /> : <Icons.XCircle className="w-24 h-24 mx-auto mb-6 text-rose-200" />}
+                                        <h1 className="text-4xl md:text-5xl font-black mb-3">{isPassed ? 'ยินดีด้วย! ท่านผ่านการประเมิน' : 'ไม่ผ่านเกณฑ์การประเมิน (100%)'}</h1>
+                                    </div>
+                                    
+                                    <div className="p-8 md:p-12 text-center">
+                                        <div className="grid grid-cols-3 gap-4 mb-10">
+                                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                                <div className="text-slate-500 text-sm font-bold uppercase mb-1">คะแนนรวม</div>
+                                                <div className="text-3xl font-black text-slate-800">{score}/{questions.length}</div>
+                                            </div>
+                                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                                <div className="text-slate-500 text-sm font-bold uppercase mb-1">เวลาค้นคว้า</div>
+                                                <div className="text-3xl font-black text-slate-800">{formatTime(totalTime)}</div>
+                                            </div>
+                                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                                <div className="text-slate-500 text-sm font-bold uppercase mb-1">จำนวนครั้งที่สอบ</div>
+                                                <div className="text-3xl font-black text-slate-800">{attemptCount}</div>
+                                            </div>
+                                        </div>
+
+                                        {!isPassed && (
+                                            <div className="bg-rose-50 border border-rose-200 p-8 rounded-2xl mb-8 text-left shadow-sm">
+                                                <h3 className="font-bold text-rose-800 mb-4 text-xl flex items-center"><Icons.AlertTriangle className="w-6 h-6 mr-2"/> ข้อที่ท่านพลาดไป (โปรดทบทวนก่อนทำใหม่)</h3>
+                                                <ul className="space-y-4">
+                                                    {logs.filter(l => !l.isCorrect).map((log, i) => {
+                                                        const q = questions.find(q => q.id === log.questionId);
+                                                        return (
+                                                            <li key={i} className="text-slate-700 text-base flex items-start bg-white p-4 rounded-lg border border-rose-100">
+                                                                <Icons.XCircle className="w-5 h-5 text-rose-500 mr-3 shrink-0 mt-0.5" />
+                                                                <div>
+                                                                    <strong className="block text-slate-900 mb-1">{q.topic}</strong>
+                                                                    <span className="text-rose-700 bg-rose-100 px-2 py-0.5 rounded text-sm mr-2">เฉลย</span> {q.explanation}
+                                                                </div>
+                                                            </li>
+                                                        );
+                                                    })}
+                                                </ul>
+                                            </div>
+                                        )}
+
+                                        {isPassed ? (
+                                            <button onClick={handleIssueCertificate} className="w-full bg-[#0f172a] hover:bg-[#1e293b] text-white text-xl font-bold py-5 rounded-xl shadow-xl transition-transform hover:scale-[1.02] flex justify-center items-center">
+                                                <Icons.Mail className="w-7 h-7 mr-3" /> ออกใบประกาศนียบัตร
+                                            </button>
+                                        ) : (
+                                            <button onClick={handleRetry} className="w-full bg-[#0ea5e9] hover:bg-[#0284c7] text-white text-xl font-bold py-5 rounded-xl shadow-xl transition-transform hover:scale-[1.02] flex justify-center items-center">
+                                                <Icons.RotateCcw className="w-7 h-7 mr-3" /> เริ่มทำแบบทดสอบใหม่อีกครั้ง
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            if (step === 'certificate') {
+                return (
+                    <div className="min-h-screen bg-slate-200 p-4 md:p-8 flex flex-col items-center justify-center font-sans">
+                        <div className="max-w-4xl w-full bg-white p-3 shadow-2xl animate-fade-in-up print:shadow-none print:p-0">
+                            <div className="border-[14px] border-[#0f172a] p-3 h-full">
+                                <div className="border-4 border-[#0ea5e9] p-12 md:p-16 text-center h-full relative overflow-hidden bg-white">
+                                    <Icons.ShieldCheck className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[30rem] h-[30rem] text-slate-50 opacity-60" />
+                                    <div className="relative z-10">
+                                        <h1 className="text-5xl md:text-6xl font-black text-[#0f172a] uppercase tracking-widest mb-4 font-serif">Certificate</h1>
+                                        <h2 className="text-2xl text-sky-600 font-bold tracking-[0.3em] uppercase mb-16">of Achievement</h2>
+                                        <p className="text-slate-500 italic text-xl mb-6">This is to certify that</p>
+                                        <div className="text-5xl font-bold text-slate-800 border-b-2 border-slate-300 inline-block pb-4 px-16 mb-10">
+                                            {user.name}
+                                        </div>
+                                        <p className="text-slate-600 text-xl max-w-2xl mx-auto leading-relaxed mb-20">
+                                            Has successfully completed the Knowledge Verification Test for the <br/>
+                                            <strong className="text-2xl block mt-2 text-[#0f172a]">US Multi-Asset Index Principal Protection</strong><br/>
+                                            achieving a perfect score of 100% on Attempt #{attemptCount}.
+                                        </p>
+                                        <div className="flex justify-between items-end mt-16 px-4 md:px-12">
+                                            <div className="text-center">
+                                                <div className="text-slate-500 font-mono text-base mb-2">ID: {user.id}</div>
+                                                <div className="border-t-2 border-[#0f172a] pt-2 text-slate-800 font-bold uppercase tracking-wider text-sm w-48">Employee ID</div>
+                                            </div>
+                                            <div className="text-center px-4">
+                                                <Icons.Award className="w-20 h-20 text-amber-500 mx-auto mb-3" />
+                                                <div className="text-[#0f172a] font-black tracking-widest text-lg">PRUDENTIAL</div>
+                                            </div>
+                                            <div className="text-center">
+                                                <div className="text-slate-800 font-bold text-lg mb-2">{user.zone}</div>
+                                                <div className="border-t-2 border-[#0f172a] pt-2 text-slate-800 font-bold uppercase tracking-wider text-sm w-48">Department (Zone)</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button onClick={() => window.print()} className="mt-8 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-8 py-4 rounded-xl font-bold shadow-md flex items-center transition-colors print:hidden text-lg">
+                            <Icons.Download className="w-6 h-6 mr-3 text-sky-600" /> พิมพ์หรือบันทึก Certificate เป็น PDF
+                        </button>
+                    </div>
+                );
+            }
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

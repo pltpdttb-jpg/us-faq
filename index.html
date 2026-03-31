@@ -11,13 +11,36 @@
         tailwind.config = {
             theme: {
                 extend: {
+                    colors: {
+                        primary: '#4D7EFE',      
+                        primaryDark: '#3B66D9',
+                        primaryLight: '#E8F0FE',
+                        surface: '#F4F7FE',      
+                        card: '#FFFFFF',
+                        textMain: '#2B3674',     
+                        textMuted: '#A3AED0',
+                        accentOrange: '#FF975C',
+                        accentGreen: '#05CD99',
+                        danger: '#EE5D50'
+                    },
                     fontFamily: { sans: ['Prompt', 'Nunito', 'sans-serif'] },
+                    boxShadow: {
+                        'soft-3d': '0px 18px 40px rgba(112, 144, 176, 0.12)',
+                        'inner-soft': 'inset 0px 4px 6px rgba(0, 0, 0, 0.05)',
+                        'btn-primary': '0px 10px 20px rgba(77, 126, 254, 0.3)',
+                        'card-hover': '0px 20px 45px rgba(112, 144, 176, 0.2)'
+                    },
                     animation: {
                         'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
+                        'slide-in': 'slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                     },
                     keyframes: {
                         fadeInUp: {
                             '0%': { opacity: 0, transform: 'translateY(20px)' },
+                            '100%': { opacity: 1, transform: 'translateY(0)' }
+                        },
+                        slideIn: {
+                            '0%': { opacity: 0, transform: 'translateY(40px)' },
                             '100%': { opacity: 1, transform: 'translateY(0)' }
                         }
                     }
@@ -25,7 +48,7 @@
             }
         }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -34,9 +57,36 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; }
+        body { font-family: 'Prompt', sans-serif; background-color: #E2E8F0; display: flex; justify-content: center; min-height: 100vh; min-height: 100dvh; margin: 0; }
+        
+        .app-container { 
+            width: 100%; 
+            max-width: 480px; 
+            background-color: #F4F7FE; 
+            height: 100vh; 
+            height: 100dvh;
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); 
+            overflow: hidden; 
+        }
+        
+        @media (min-width: 640px) {
+            body { padding: 20px 0; }
+            .app-container { height: 90vh; border-radius: 40px; border: 8px solid white; box-shadow: 0 30px 60px rgba(0,0,0,0.12); }
+        }
+
+        .btn-modern { transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .btn-modern:active:not(:disabled) { transform: scale(0.96); }
+        
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+
         @media print {
-            body { background-color: white; }
+            body { background-color: white; padding: 0; }
+            .app-container { box-shadow: none; border: none; height: auto; min-height: 100vh; overflow: visible; }
             .print\:hidden { display: none !important; }
             .print\:shadow-none { box-shadow: none !important; }
             .print\:p-0 { padding: 0 !important; }
@@ -44,7 +94,7 @@
     </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root" class="w-full flex justify-center h-full"></div>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
@@ -56,27 +106,29 @@
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5ZnFxcm9mcWJ5ZmV6d3h3aHBoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0ODc3MTAsImV4cCI6MjA4OTA2MzcxMH0.U5rhRSSTplQbcXBL16odRMRL26dy1RCxC_6jkHjhaWA";
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- ICONS ---
+        // --- ICONS (Soft 3D Rounded Style) ---
         const Icons = {
-            User: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
-            Briefcase: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>,
-            Clock: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>,
-            CheckCircle: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>,
-            XCircle: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>,
-            ChevronRight: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>,
-            AlertTriangle: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>,
-            FileText: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>,
-            ShieldCheck: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg>,
-            Mail: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>,
-            Award: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>,
-            RotateCcw: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>,
-            Check: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>,
-            Download: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>,
-            PlusCircle: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+            User: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
+            Briefcase: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="3" ry="3"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>,
+            Clock: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>,
+            CheckCircle: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>,
+            XCircle: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>,
+            ChevronRight: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>,
+            AlertTriangle: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>,
+            FileText: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>,
+            ShieldCheck: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg>,
+            Mail: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>,
+            Award: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>,
+            RotateCcw: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>,
+            Check: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>,
+            Download: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>,
+            PlusCircle: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>,
+            ChevronLeft: ({className}) => <svg className={className} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
         };
 
-        // --- DATABASE: ข้อมูลพนักงานเริ่มต้น 29 ท่าน ---
+        // --- DATABASE: ข้อมูลพนักงานเริ่มต้น + Admin ---
         const INITIAL_EMPLOYEES = [
+            { id: 'admin', name: 'System Admin (ผู้ดูแลระบบ)', zone: 'HQ', email: 'admin@ttb.com' }, 
             { id: '003761', name: 'วรณัน สุขแก้ว (มะปราง)', zone: 'Hadyai', email: 'Woranan.Sukkeaw@prudential.co.th' },
             { id: '007278', name: 'อรวรรณ ทองชูช่วย (จิงโจ้)', zone: 'Hadyai', email: 'Orawan.Thongchoochuay@prudential.co.th' },
             { id: '007120', name: 'ธนิกกานต์ มะโนแสน (รวงข้าว)', zone: 'Hadyai', email: 'Tanikkarn.Manosaen@prudential.co.th' },
@@ -108,33 +160,33 @@
             { id: '008514', name: 'ศศิโสม เมืองนาโพธิ์ (ซี)', zone: 'Suratthani', email: 'Sasisome.Muangnapo@prudential.co.th' }
         ];
 
-        // --- 25 QUESTIONS ---
+        // --- 25 QUESTIONS (Word-by-Word 100% จากเอกสาร PDF FAQ) ---
         const QUESTIONS_DB = [
             { id: 1, type: 'ab', topic: "1. การอธิบาย Index ให้เข้าใจง่าย", optA: "US Multi Asset คือ Index ที่มีโครงสร้างการลงทุนที่ใช้ AI ในการวิเคราะห์และพยากรณ์เศรษฐกิจอเมริกาและจีนและล่วงหน้า เพื่อคาดการณ์ GDP และ เงินเฟ้อ (CPI) แล้วใช้ AI ในการบริหาร จัดพอร์ตการลงทุนที่เหมาะสม เพื่อที่จะสร้างผลตอบแทนสูงๆให้กับลูกค้า บนความเสี่ยงต่ำ ๆ โดยถูกออกแบบมาในรูปแบบประกัน เพื่อที่จะการันตีเงินต้นได้", optB: "US Multi Asset คือ Index ที่มีโครงสร้างการลงทุนที่ใช้ AI ในการวิเคราะห์และพยากรณ์เศรษฐกิจอเมริกาและยุโรปล่วงหน้า เพื่อคาดการณ์ GDP และ เงินเฟ้อ (CPI) แล้วใช้ AI ในการบริหาร จัดพอร์ตการลงทุนที่เหมาะสม เพื่อที่จะสร้างผลตอบแทนสูงๆให้กับลูกค้า บนความเสี่ยงต่ำ ๆ โดยถูกออกแบบมาในรูปแบบประกัน เพื่อที่จะการันตีเงินต้นได้", correct: "A", explanation: "พยากรณ์เศรษฐกิจ 'อเมริกาและจีน' (ไม่มียุโรป)" },
-            { id: 2, type: 'ab', topic: "2. ประวัติและความสำเร็จของ QuantCube", optA: "บริษัทก่อตั้งเมื่อเดือนกรกฎาคม 2013 ที่ประเทศฝรั่งเศส โดยผู้ประกอบการ 2 คนที่เน้นใช้ AI และ Big Data เพื่อวิเคราะห์ข้อมูลทางเลือก (Alternative Data) เช่น ภาพถ่ายดาวเทียม และข้อมูลโซเชียลมีเดีย เพื่อพยากรณ์ตัวเลขเศรษฐกิจแบบเรียลไทม์", optB: "บริษัทก่อตั้งเมื่อเดือนกรกฎาคม 2013 ที่ประเทศสหรัฐอเมริกา โดยผู้ประกอบการ 2 คนที่เน้นใช้ AI และ Big Data เพื่อวิเคราะห์ข้อมูลทางเลือก (Alternative Data) เช่น ภาพถ่ายดาวเทียม และข้อมูลโซเชียลมีเดีย เพื่อพยากรณ์ตัวเลขเศรษฐกิจแบบเรียลไทม์", correct: "A", explanation: "ก่อตั้งที่ 'ประเทศฝรั่งเศส' (ไม่ใช่สหรัฐอเมริกา)" },
-            { id: 3, type: 'ab', topic: "3. ทำไม Citi ถึงมั่นใจและเลือกใช้ QuantCube", optA: "เพราะ QC ใช้ AI ขั้นสูงในการคาดการณ์ตัวเลขเศรษฐกิจสหรัฐฯ (GDP และเงินเฟ้อ) ได้แบบรายวัน ซึ่งเร็วกว่าประกาศของทางการมากสุดถึง 3 เดือนทำให้เห็นแนวโน้มตลาดก่อนใคร", optB: "เพราะ QC ใช้ AI ขั้นสูงในการคาดการณ์ตัวเลขเศรษฐกิจสหรัฐฯ (GDP และเงินเฟ้อ) ได้แบบรายวัน ซึ่งเร็วกว่าประกาศของทางการมากสุดถึง 3 สัปดาห์ทำให้เห็นแนวโน้มตลาดก่อนใคร", correct: "A", explanation: "เร็วกว่าทางการมากสุดถึง '3 เดือน'" },
-            { id: 4, type: 'ab', topic: "4. สถาบันอื่นที่ใช้บริการ QuantCube", optA: "มีสถาบันการเงินหลายแห่งที่ใช้บริการ QuantCube เช่น Allianz Global investors, Bank of America, Goldman Sachs, Moody's, The Word Bank, BNP Paribas, Societe Generale, Mizuho และ Hedge Funds ระดับชั้นนำกว่า 40 แห่ง", optB: "มีสถาบันการเงินหลายแห่งที่ใช้บริการ QuantCube เช่น Allianz Global investors, JP Morgan, Goldman Sachs, Moody's, The Word Bank, BNP Paribas, Societe Generale, Mizuho และ Hedge Funds ระดับชั้นนำกว่า 40 แห่ง", correct: "A", explanation: "ในรายชื่อตามเอกสารไม่มี JP Morgan แต่มี Bank of America" },
-            { id: 5, type: 'ab', topic: "5. จุดเด่นและการทำงานของ Index", optA: "การใช้ AI ประมวลผลข้อมูลมหาศาล (Big Data) เพื่อระบุภาวะเศรษฐกิจใน \"ปัจจุบัน\" ทันที (Al-driven Nowcasting) ไม่ต้องรอรายงานย้อนหลัง", optB: "การใช้ AI ประมวลผลข้อมูลมหาศาล (Big Data) เพื่อระบุภาวะเศรษฐกิจใน \"อนาคต\" ล่วงหน้า (Al-driven Forecasting) ไม่ต้องรอรายงานย้อนหลัง", correct: "A", explanation: "ระบบระบุภาวะเศรษฐกิจใน 'ปัจจุบัน' ทันที (Nowcasting)" },
+            { id: 2, type: 'ab', topic: "2. ประวัติและความสำเร็จของ QuantCube", optA: "บริษัทก่อตั้งเมื่อเดือนกรกฎาคม 2013 ที่ประเทศฝรั่งเศส โดยผู้ประกอบการ 2 คนที่เน้นใช้ AI และ Big Data เพื่อวิเคราะห์ข้อมูลทางเลือก (Alternative Data) เช่น ภาพถ่ายดาวเทียม และข้อมูลโซเชียลมีเดีย เพื่อพยากรณ์ตัวเลขเศรษฐกิจแบบเรียลไทม์", optB: "บริษัทก่อตั้งเมื่อเดือนกรกฎาคม 2013 ที่ประเทศสหรัฐอเมริกา โดยผู้ประกอบการ 2 คนที่เน้นใช้ AI และ Big Data เพื่อวิเคราะห์ข้อมูลทางเลือก (Alternative Data) เช่น ภาพถ่ายดาวเทียม และข้อมูลโซเชียลมีเดีย เพื่อพยากรณ์ตัวเลขเศรษฐกิจแบบเรียลไทม์", correct: "A", explanation: "ก่อตั้งที่ 'ประเทศฝรั่งเศส'" },
+            { id: 3, type: 'ab', topic: "3. ทำไม Citi ถึงมั่นใจและเลือกใช้ QuantCube", optA: "เพราะ QC ใช้ AI ขั้นสูงในการคาดการณ์ตัวเลขเศรษฐกิจสหรัฐฯ (GDP และเงินเฟ้อ) ได้แบบรายวัน ซึ่งเร็วกว่าประกาศของทางการมากสุดถึง 3 เดือนทำให้เห็นแนวโน้มตลาดก่อนใคร", optB: "เพราะ QC ใช้ AI ขั้นสูงในการคาดการณ์ตัวเลขเศรษฐกิจสหรัฐฯ (GDP และเงินเฟ้อ) ได้แบบรายวัน ซึ่งเร็วกว่าประกาศของทางการมากสุดถึง 3 สัปดาห์ทำให้เห็นแนวโน้มตลาดก่อนใคร", correct: "A", explanation: "เร็วกว่าประกาศของทางการมากสุดถึง '3 เดือน'" },
+            { id: 4, type: 'ab', topic: "4. สถาบันอื่นที่ใช้บริการ QuantCube", optA: "มีสถาบันการเงินหลายแห่งที่ใช้บริการ QuantCube เช่น Allianz Global investors, Bank of America, Goldman Sachs, Moody's, The Word Bank, BNP Paribas, Societe Generale, Mizuho และ Hedge Funds ระดับชั้นนำกว่า 40 แห่ง", optB: "มีสถาบันการเงินหลายแห่งที่ใช้บริการ QuantCube เช่น Allianz Global investors, JP Morgan, Goldman Sachs, Moody's, The Word Bank, BNP Paribas, Societe Generale, Mizuho และ Hedge Funds ระดับชั้นนำกว่า 40 แห่ง", correct: "A", explanation: "ในรายชื่อมี Bank of America (ไม่มี JP Morgan)" },
+            { id: 5, type: 'ab', topic: "5. จุดเด่นและการทำงานของ Index", optA: "การใช้ AI ประมวลผลข้อมูลมหาศาล (Big Data) เพื่อระบุภาวะเศรษฐกิจใน \"ปัจจุบัน\" ทันที (Al-driven Nowcasting) ไม่ต้องรอรายงานย้อนหลัง", optB: "การใช้ AI ประมวลผลข้อมูลมหาศาล (Big Data) เพื่อระบุภาวะเศรษฐกิจใน \"อนาคต\" ล่วงหน้า (Al-driven Forecasting) ไม่ต้องรอรายงานย้อนหลัง", correct: "A", explanation: "ระบุภาวะเศรษฐกิจใน 'ปัจจุบัน' ทันที (Nowcasting)" },
             { id: 6, type: 'ab', topic: "6. ปัจจัยที่ถูกนำมาวิเคราะห์และความแม่นยำ", optA: "ในอดีต ข้อมูลของ QC มีความสัมพันธ์ (Correlation) กับ เงินเฟ้อสหรัฐฯ (CPI) ถึง 99% และ GDP สหรัฐฯ 95% และรู้ล่วงหน้าก่อนประกาศจริงประมาณ 1-2 สัปดาห์ (สำหรับ CPI)", optB: "ในอดีต ข้อมูลของ QC มีความสัมพันธ์ (Correlation) กับ เงินเฟ้อสหรัฐฯ (CPI) ถึง 95% และ GDP สหรัฐฯ 99% และรู้ล่วงหน้าก่อนประกาศจริงประมาณ 1-2 สัปดาห์ (สำหรับ CPI)", correct: "A", explanation: "CPI คือ 99% และ GDP คือ 95%" },
-            { id: 7, type: 'ab', topic: "7. ผลตอบแทนในอดีต (Performance)", optA: "ให้ผลตอบแทนเฉลี่ย 9.21% ต่อปี (ข้อมูลย้อนหลัง พ.ย 2016- ม.ค. 2026) โดยมีความผันผวน 7.4% และค่า Sharpe Ratio (ผลตอบแทนต่อความเสี่ยง) 1.25", optB: "ให้ผลตอบแทนเฉลี่ย 9.21% ต่อปี (ข้อมูลย้อนหลัง พ.ย 2016- ม.ค. 2026) โดยมีความผันผวน 7.4% และค่า Sharpe Ratio (ผลตอบแทนต่อความเสี่ยง) 1.52", correct: "A", explanation: "ค่า Sharpe Ratio ที่ระบุคือ 1.25" },
+            { id: 7, type: 'ab', topic: "7. ผลตอบแทนในอดีต (Performance)", optA: "ให้ผลตอบแทนเฉลี่ย 9.21% ต่อปี (ข้อมูลย้อนหลัง พ.ย 2016- ม.ค. 2026) โดยมีความผันผวน 7.4% และค่า Sharpe Ratio (ผลตอบแทนต่อความเสี่ยง) 1.25 อย่างไรก็ตามผลตอบแทนเฉลี่ยย้อนหลังไม่สามารถใช้การันตีผลการดำเนินงานในอนาคตได้", optB: "ให้ผลตอบแทนเฉลี่ย 9.21% ต่อปี (ข้อมูลย้อนหลัง พ.ย 2016- ม.ค. 2026) โดยมีความผันผวน 7.4% และค่า Sharpe Ratio (ผลตอบแทนต่อความเสี่ยง) 1.25 ซึ่งผลตอบแทนเฉลี่ยย้อนหลังนี้สามารถใช้การันตีผลการดำเนินงานในอนาคตได้อย่างแน่นอน", correct: "A", explanation: "มีคำเตือน: 'อย่างไรก็ตามผลตอบแทนเฉลี่ยย้อนหลังไม่สามารถใช้การันตีผลการดำเนินงานในอนาคตได้'" },
             { id: 8, type: 'ab', topic: "8. เปรียบเทียบกับดัชนีอื่นในช่วงวิกฤต", optA: "โมเดลตรวจจับสัญญาณ \"เศรษฐกิจชะลอตัว (Slow Growth)\" ได้ล่วงหน้า 3 เดือน จึงสั่งขายหุ้นทิ้งและย้ายเงินไปถือพันธบัตรสหรัฐฯ, ทองคำ และเงินดอลลาร์", optB: "โมเดลตรวจจับสัญญาณ \"เศรษฐกิจชะลอตัว (Slow Growth)\" ได้ล่วงหน้า 3 เดือน จึงสั่งขายหุ้นทิ้งและย้ายเงินไปถือพันธบัตรสหรัฐฯ, ทองคำ และเงินเยน", correct: "A", explanation: "ย้ายเงินไปถือพันธบัตรสหรัฐฯ, ทองคำ และ 'เงินดอลลาร์'" },
-            { id: 9, type: 'ab', topic: "9. สัดส่วนการลงทุน (Portfolio Weights)", optA: "Stagflation (เศรษฐกิจฝืดเคือง): GDP ชะลอตัว + เงินเฟ้อสูง -> เน้นเงินสด, สินค้าโภคภัณฑ์ (น้ำมัน, ทองแดง)", optB: "Stagflation (เศรษฐกิจฝืดเคือง): GDP ชะลอตัว + เงินเฟ้อสูง -> เน้นพันธบัตร, สินค้าโภคภัณฑ์ (น้ำมัน, ทองแดง)", correct: "A", explanation: "ในภาวะ Stagflation เน้น 'เงินสด'" },
+            { id: 9, type: 'ab', topic: "9. สัดส่วนการลงทุน (Portfolio Weights)", optA: "Stagflation (เศรษฐกิจฝืดเคือง): GDP ชะลอตัว + เงินเฟ้อสูง -> เน้นเงินสด, สินค้าโภคภัณฑ์ (น้ำมัน, ทองแดง)", optB: "Stagflation (เศรษฐกิจฝืดเคือง): GDP ชะลอตัว + เงินเฟ้อสูง -> เน้นพันธบัตร, สินค้าโภคภัณฑ์ (น้ำมัน, ทองแดง)", correct: "A", explanation: "Stagflation เน้น 'เงินสด'" },
             { id: 10, type: 'ab', topic: "10. ความถี่ในการเปลี่ยนสภาวะเศรษฐกิจ", optA: "ระบบกำหนดว่าจะเปลี่ยน Regime ก็ต่อเมื่อสัญญาณนิ่งต่อเนื่องกัน 3 วัน ถ้าเศรษฐกิจไม่เปลี่ยน จะปรับพอร์ตกลับสู่สัดส่วนมาตรฐานเดือนละครั้ง แต่การปรับเพื่อคุมความเสี่ยง (Volatility Targeting) จะทำทุกวัน", optB: "ระบบกำหนดว่าจะเปลี่ยน Regime ก็ต่อเมื่อสัญญาณนิ่งต่อเนื่องกัน 3 วัน ถ้าเศรษฐกิจไม่เปลี่ยน จะปรับพอร์ตกลับสู่สัดส่วนมาตรฐานทุกวัน แต่การปรับเพื่อคุมความเสี่ยง (Volatility Targeting) จะทำเดือนละครั้ง", correct: "A", explanation: "สัดส่วนมาตรฐานทำเดือนละครั้ง, คุมความเสี่ยงทำทุกวัน" },
-            { id: 11, type: 'interactive', topic: "11. เปรียบเทียบ US Multi Asset กับ Global index", text: "US Multi Asset ยอมรับความผันผวนได้สูงกว่าที่ {DROP1} และรับประกันอายุ {DROP2} ในขณะที่ Global Index เน้นความผันผวนไม่เกิน 5% และรับประกันอายุถึง 70 ปี", options1: ["8% และมี Decrement ที่ 2%", "5% และมี Decrement ที่ 2%"], options2: ["1 เดือน - 75 ปี", "1 เดือน - 70 ปี"], correct1: "8% และมี Decrement ที่ 2%", correct2: "1 เดือน - 75 ปี", explanation: "US Multi Asset ผันผวนได้ 8% และรับประกันอายุสูงสุดถึง 75 ปี" },
-            { id: 12, type: 'ab', topic: "12. Participation Rate 260% ทำได้อย่างไร", optA: "การที่บริษัทสามารถเสนอ Participation Rate ในระดับสูงนี้ได้ เป็นผลจากการใช้ตราสารอนุพันธ์เพื่อบริหารจัดการภาระผูกพันกับลูกค้า โดยมีการจัดสรรโครงสร้างตราสารอนุพันธ์ให้ช่วยลดต้นทุนรวมของผลิตภัณฑ์ได้", optB: "การที่บริษัทสามารถเสนอ Participation Rate ในระดับสูงนี้ได้ เป็นผลจากการนำเงินเบี้ยประกันส่วนใหญ่ไปซื้อหุ้นในดัชนีแบบทวีคูณ (Leverage) โดยมีการจัดสรรโครงสร้างให้ช่วยลดต้นทุนรวมของผลิตภัณฑ์ได้", correct: "A", explanation: "ทำได้จากการใช้ 'ตราสารอนุพันธ์' ไม่ใช่การซื้อหุ้น Leverage" },
-            { id: 13, type: 'ab', topic: "13. กรณี AI ระบบล่ม", optA: "มีระบบ (Rule based) ที่ป้องกัน Error คือ 3-Day confirmation สมมุติ AI ได้รับข้อมูลที่เพี้ยนเข้ามา 1 วัน แล้วสั่งให้เปลี่ยนพอร์ตระบบจะยังไม่ทำ ระบบจะรอเช็คซ้ำอีก 2 วัน", optB: "มีระบบ (AI backup) ที่ป้องกัน Error คือ 3-Day confirmation สมมุติ AI ได้รับข้อมูลที่เพี้ยนเข้ามา 1 วัน แล้วสั่งให้เปลี่ยนพอร์ตระบบจะยังไม่ทำ ระบบจะรอเช็คซ้ำอีก 2 วัน", correct: "A", explanation: "กลไกป้องกัน Error คือระบบ 'Rule based'" },
-            { id: 14, type: 'ab', topic: "14. จะติดตามผลการดำเนินงานได้อย่างไร", optA: "สามารถตรวจสอบได้ทางเว็บไซต์ของบริษัทประกัน (จะเห็นผลการดำเนินงานในช่วงสิ้นเดือนกุมภาพันธ์ 2569)", optB: "สามารถตรวจสอบได้ทางเว็บไซต์ของบริษัทประกัน (จะเห็นผลการดำเนินงานในช่วงสิ้นเดือนมกราคม 2569)", correct: "A", explanation: "จะเห็นผลการดำเนินงานในช่วงสิ้นเดือนกุมภาพันธ์ 2569" },
-            { id: 15, type: 'ab', topic: "15. Ticker ใน Bloomberg", optA: "Ticker: CIMARA82", optB: "Ticker: CIMARA28", correct: "A", explanation: "Ticker ที่ถูกต้องคือ CIMARA82" },
-            { id: 16, type: 'interactive', topic: "16. สูตรคำนวณเงินปันผลเมื่อครบกำหนดสัญญา", text: "ส่วนสุดท้ายของสูตรคือการนำไปคูณกับ: Max(0, [ {DROP1} ] - 100%)", options1: ["ระดับดัชนี ณ วันคำนวณมูลค่าวันสุดท้าย / ระดับดัชนี ณ วันคำนวณมูลค่าวันแรก", "ระดับดัชนี ณ วันคำนวณมูลค่าวันแรก / ระดับดัชนี ณ วันคำนวณมูลค่าวันสุดท้าย"], correct1: "ระดับดัชนี ณ วันคำนวณมูลค่าวันสุดท้าย / ระดับดัชนี ณ วันคำนวณมูลค่าวันแรก", explanation: "ตามสูตร ต้องเอา (ระดับดัชนีวันสุดท้าย หารด้วย ระดับดัชนีวันแรก) ลบ 100%" },
+            { id: 11, type: 'interactive', topic: "11. เปรียบเทียบ US Multi Asset กับ Global index", text: "US Multi Asset ยอมรับความผันผวนได้สูงกว่าที่ {DROP1} และรับประกันอายุ {DROP2} ในขณะที่ Global Index เน้นความผันผวนไม่เกิน 5% และรับประกันอายุถึง 70 ปี", options1: ["8% และมี Decrement ที่ 2%", "5% และมี Decrement ที่ 2%"], options2: ["1 เดือน - 75 ปี", "1 เดือน - 70 ปี"], correct1: "8% และมี Decrement ที่ 2%", correct2: "1 เดือน - 75 ปี", explanation: "US Multi Asset ผันผวนได้สูงกว่าที่ 8% และรับประกันอายุ 1 เดือน - 75 ปี" },
+            { id: 12, type: 'ab', topic: "12. Participation Rate 260% ทำได้อย่างไร", optA: "ผู้เอาประกันภัยจะได้รับผลตอบแทนจากการปรับขึ้นของสินทรัพย์อ้างอิงในอัตรา 2.6 เท่าของผลตอบแทนดัชนีอ้างอิง ตามเงื่อนไขของผลิตภัณฑ์ การที่บริษัทสามารถเสนอ Participation Rate ในระดับสูงนี้ได้ เป็นผลจากการใช้ตราสารอนุพันธ์เพื่อบริหารจัดการภาระผูกพันกับลูกค้า โดยมีการจัดสรรโครงสร้างตราสารอนุพันธ์ให้ช่วยลดต้นทุนรวมของผลิตภัณฑ์ได้ ทำให้บริษัทสามารถออกแบบผลตอบแทนที่เหมาะสม และเพิ่ม Participation Rate ให้สูงขึ้น เพื่อสร้างมูลค่าเพิ่มให้กับผู้เอาประกันภัยได้", optB: "ผู้เอาประกันภัยจะได้รับผลตอบแทนจากการปรับขึ้นของสินทรัพย์อ้างอิงในอัตรา 2.6 เท่าของผลตอบแทนดัชนีอ้างอิง ตามเงื่อนไขของผลิตภัณฑ์ การที่บริษัทสามารถเสนอ Participation Rate ในระดับสูงนี้ได้ เป็นผลจากการนำเงินเบี้ยประกันส่วนใหญ่ไปซื้อหุ้นในดัชนีแบบทวีคูณ (Leverage) โดยมีการจัดสรรโครงสร้างให้ช่วยลดต้นทุนรวมของผลิตภัณฑ์ได้ ทำให้เพิ่มผลตอบแทนได้", correct: "A", explanation: "เป็นผลจากการใช้ 'ตราสารอนุพันธ์เพื่อบริหารจัดการภาระผูกพันกับลูกค้า'" },
+            { id: 13, type: 'ab', topic: "13. กรณี AI ระบบล่ม", optA: "เป็นไปได้ยากมาก เพราะ AI ที่ใช้ไม่ใช่ Robot Trade และไม่ใช่ Generative AI แบบ Chat GPT ที่ให้คำตอบที่ผิดพลาดได้ เนื่องจาก 1) มีระบบ (Rule based) ที่ป้องกัน Error คือ 3-Day confirmation • สมมุติ AI ได้รับข้อมูลที่เพี้ยนเข้ามา 1 วัน แล้วสั่งให้เปลี่ยนพอร์ตระบบจะยังไม่ทำ ระบบจะรอเช็คซ้ำอีก 2 วัน ถ้าข้อมูลยังยืนยันครบ 3 วัน ระบบถึงจะทำการปรับพอร์ต 2) ใช้ข้อมูลเยอะจน Error ยาก : AI ประมวลผลจากข้อมูล 1.5 ล้านจุด (ดาวเทียม / ข่าว / ราคา) ถ้าข้อมูลแหล่งใดแหล่งหนึ่งเสีย (เช่น ดาวเทียมเสีย 1 ดวง) ก็แทบไม่มีผลกระทบกับภาพรวม", optB: "เป็นไปได้ยากมาก เพราะ AI ที่ใช้เป็น Generative AI ขั้นสูง มีระบบ (AI backup) ที่ป้องกัน Error คือ 3-Day confirmation สมมุติ AI ได้รับข้อมูลที่เพี้ยนเข้ามา 1 วัน แล้วสั่งให้เปลี่ยนพอร์ตระบบจะยังไม่ทำ ระบบจะรอเช็คซ้ำอีก 2 วัน ถ้าข้อมูลยังยืนยันครบ 3 วัน ระบบถึงจะทำการปรับพอร์ต", correct: "A", explanation: "ไม่ใช่ Generative AI และประมวลผลข้อมูล 1.5 ล้านจุด" },
+            { id: 14, type: 'ab', topic: "14. จะติดตามผลการดำเนินงานได้อย่างไร", optA: "1) (จะเห็นผลการดำเนินงานในช่วงสิ้นเดือนกุมภาพันธ์ 2569) 2) https://www.prudential.co.th/corp/prudential-th/th/about-prudential-thailand/our-financial-performance/indexprice1", optB: "สามารถตรวจสอบได้ทางเว็บไซต์ของบริษัทประกันเพียงช่องทางเดียว โดยจะเริ่มเห็นผลการดำเนินงานในช่วงสิ้นเดือนมกราคม 2569", correct: "A", explanation: "ช่วงสิ้นเดือนกุมภาพันธ์ 2569 พร้อมมี Link ประกอบใน FAQ" },
+            { id: 15, type: 'ab', topic: "15. Ticker ใน Bloomberg", optA: "Ticker: CIMARA82", optB: "Ticker: CIMARA28", correct: "A", explanation: "Ticker คือ CIMARA82" },
+            { id: 16, type: 'interactive', topic: "16. สูตรคำนวณเงินปันผลเมื่อครบกำหนดสัญญา", text: "ส่วนสุดท้ายของสูตรคือการนำไปคูณกับ: Max(0, [ {DROP1} ] - 100%)", options1: ["ระดับดัชนี ณ วันคำนวณมูลค่าวันสุดท้าย / ระดับดัชนี ณ วันคำนวณมูลค่าวันแรก", "ระดับดัชนี ณ วันคำนวณมูลค่าวันแรก / ระดับดัชนี ณ วันคำนวณมูลค่าวันสุดท้าย"], correct1: "ระดับดัชนี ณ วันคำนวณมูลค่าวันสุดท้าย / ระดับดัชนี ณ วันคำนวณมูลค่าวันแรก", explanation: "(ระดับดัชนีวันสุดท้าย หารด้วย ระดับดัชนีวันแรก) ลบ 100%" },
             { id: 17, type: 'interactive', topic: "17. IRR ตัวอย่างในแต่ละผลตอบแทน", text: "เพศชาย อายุ 40 ปี ทุน 1 ล้านบาท (มีส่วนลดเบี้ย) หากผลตอบแทนตามดัชนีอ้างอิงเป็น 4% จะได้ IRR {DROP1} แต่ถ้าทุน 50,000 บาท จะได้ IRR {DROP2}", options1: ["9.10%", "9.03%"], options2: ["9.03%", "9.10%"], correct1: "9.10%", correct2: "9.03%", explanation: "ทุน 1 ล้านบาท ได้ IRR 9.10% ส่วนทุน 50,000 บาท ได้ IRR 9.03%" },
-            { id: 18, type: 'ab', topic: "18. บริษัทประกันจะได้กำไรอย่างไร", optA: "บริษัทจะนำเงินที่ลูกค้าจ่ายเบี้ยประกันหลังหักค่าใช้จ่ายต่างๆ ไปลงทุนเพื่อสร้างผลกำไร และมีการบริหารความเสี่ยงจากการลงทุนในดัชนี เพื่อให้แน่ใจว่าสามารถจ่ายผลประโยชน์ที่การันตีได้", optB: "บริษัทจะนำเงินที่ลูกค้าจ่ายเบี้ยประกันทั้งหมด ไปลงทุนเพื่อสร้างผลกำไร และมีการบริหารความเสี่ยงจากการลงทุนในดัชนี เพื่อให้แน่ใจว่าสามารถจ่ายผลประโยชน์ที่การันตีได้", correct: "A", explanation: "บริษัทนำเงินไปลงทุน 'หลังหักค่าใช้จ่ายต่างๆ' แล้ว" },
-            { id: 19, type: 'ab', topic: "19. ความเสี่ยงการลงทุนในทองคำ", optA: "AI จะเลือกถือทองคำเฉพาะในช่วงเศรฐกิจชะลอตัว (Slow growth) เท่านั้น และมีการกระจายความเสี่ยงโดยการถือคู่กับพันธบัตรรัฐบาลเพื่อเน้นรักษาเงินต้นให้ปลอดภัย", optB: "AI จะเลือกถือทองคำเฉพาะในช่วงเศรฐกิจฝืดเคือง (Stagflation) เท่านั้น และมีการกระจายความเสี่ยงโดยการถือคู่กับพันธบัตรรัฐบาลเพื่อเน้นรักษาเงินต้นให้ปลอดภัย", correct: "A", explanation: "ถือทองคำเฉพาะช่วง 'Slow growth'" },
-            { id: 20, type: 'ab', topic: "20. ความเสี่ยงจากอัตราแลกเปลี่ยน", optA: "ผลิตภัณฑ์นี้มีความเสี่ยงจากอัตราแลกเปลี่ยน แต่มีผลกระทบจำกัดเฉพาะในส่วนเงินปันผลที่ลูกค้าจะได้รับ เงินต้นของลูกค้ายังคงปลอดภัย 100%", optB: "ผลิตภัณฑ์นี้มีความเสี่ยงจากอัตราแลกเปลี่ยน ซึ่งส่งผลกระทบทั้งในส่วนเงินปันผลและเงินต้นของลูกค้าที่อาจปรับลดลงได้ไม่เกิน 2%", correct: "A", explanation: "กระทบเฉพาะเงินปันผล เงินต้นปลอดภัย 100%" },
-            { id: 21, type: 'ab', topic: "21. ถ้าบริษัท Citi หรือ QuantCube ปิดไป", optA: "หากบริษัทไม่สามารถหาดัชนีใหม่มาทดแทนตามวรรคข้างต้นได้ บริษัทจะทำการชำระเป็นเงินสดตามมูลค่าผลประโยชน์ตามสัญญาอ้างอิงดัชนีที่บริษัทได้รับจากการยกเลิกการคำนวณดัชนีอ้างอิงข้างต้น", optB: "หากบริษัทไม่สามารถหาดัชนีใหม่มาทดแทนตามวรรคข้างต้นได้ บริษัทจะทำการโอนย้ายเงินลงทุนไปใน Global Index แทนตามมูลค่าผลประโยชน์ตามสัญญาอ้างอิงดัชนีที่บริษัทได้รับจากการยกเลิก", correct: "A", explanation: "เงื่อนไขระบุชัดเจนว่า 'ชำระเป็นเงินสด'" },
-            { id: 22, type: 'ab', topic: "22. อัตราการมีส่วนร่วม 260% การันตีหรือไม่", optA: "ผู้เอาประกันภัยจะได้รับผลตอบแทนจากการปรับขึ้นของสินทรัพย์อ้างอิงในอัตรา 260% (2.6 เท่า) ของผลตอบแทนดัชนีอ้างอิง ตามเงื่อนไขของผลิตภัณฑ์ โดยผู้เอาประกันสามารถศึกษาสูตรการคำนวณผลตอบแทนตามดัชนีอ้างอิงเมื่อครบกำหนดสัญญาได้", optB: "ผู้เอาประกันภัยจะได้รับการันตีผลตอบแทนขั้นต่ำจากการปรับขึ้นของสินทรัพย์อ้างอิงในอัตรา 260% (2.6 เท่า) ของเงินต้น ตามเงื่อนไขของผลิตภัณฑ์", correct: "A", explanation: "PR 260% คือสัดส่วนการคูณจากดัชนี ไม่ใช่การันตี 260% ของเงินต้น" },
-            { id: 23, type: 'ab', topic: "23. หากเกิดสงครามโลกครั้งที่ 3", optA: "ผลิตภัณฑ์ตัวนี้เป็นผลิตภัณฑ์ประกันชีวิต ซึ่งหากเกิดเหตุการณ์ความผันผวนทางเศรษฐกิจ อย่างน้อยเงินต้นของลูกค้าก็จะไม่กระทบไปด้วย (เงินต้นไม่หาย) และยังคงได้รับความคุ้มครองชีวิตตามสัญญากรมธรรม์", optB: "ผลิตภัณฑ์ตัวนี้เป็นผลิตภัณฑ์กองทุนรวม ซึ่งหากเกิดเหตุการณ์ความผันผวนทางเศรษฐกิจ อย่างน้อยเงินต้นของลูกค้าก็จะไม่กระทบไปด้วย (เงินต้นไม่หาย) และยังคงได้รับสิทธิในการเวนคืนทันที", correct: "A", explanation: "เป็นผลิตภัณฑ์ 'ประกันชีวิต' และคุ้มครองชีวิตตามสัญญา" },
-            { id: 24, type: 'ab', topic: "24. การบริหารดัชนีตลอด 15 ปี", optA: "การบริหารดัชนีนี้ มีทีมผู้เชี่ยวชาญภายในของCiti (Citi Researchers) ที่มีการติดตาม และทบทวนสัดส่วนการลงทุนอย่างสม่ำเสมอ เพื่อให้สอดคล้องกับสภาวะเศรษฐกิจที่เปลี่ยนแปลงไป", optB: "การบริหารดัชนีนี้ มีทีมผู้เชี่ยวชาญภายในของQuantCube (QC Researchers) ที่มีการติดตาม และทบทวนสัดส่วนการลงทุนอย่างสม่ำเสมอ เพื่อให้สอดคล้องกับสภาวะเศรษฐกิจที่เปลี่ยนแปลงไป", correct: "A", explanation: "เป็นทีมผู้เชี่ยวชาญของ 'Citi (Citi Researchers)'" },
-            { id: 25, type: 'ab', topic: "25. สาเหตุที่ผลตอบแทนต่ำปี 2024-2025", optA: "ปี 2024 เป็นปีที่ตลาดผันผวนแรงจากเหตุการณ์เซอร์ไพรส์หลายเรื่อง ได้แก่ ธนาคารกลางญี่ปุ่น (BOJ) ขึ้นดอกเบี้ยแบบไม่คาดคิด ทำให้เงินเยนแข็งค่าเร็ว ส่งผลกระทบต่อกลยุทธ์ค่าเงิน", optB: "ปี 2024 เป็นปีที่ตลาดผันผวนแรงจากเหตุการณ์เซอร์ไพรส์หลายเรื่อง ได้แก่ ธนาคารกลางสหรัฐฯ (Fed) ลดดอกเบี้ยแบบไม่คาดคิด ทำให้เงินดอลลาร์อ่อนค่าเร็ว ส่งผลกระทบต่อกลยุทธ์ค่าเงิน", correct: "A", explanation: "สาเหตุคือธนาคารกลางญี่ปุ่น (BOJ) 'ขึ้น' ดอกเบี้ย" }
+            { id: 18, type: 'ab', topic: "18. บริษัทประกันจะได้กำไรอย่างไร", optA: "บริษัทจะนำเงินที่ลูกค้าจ่ายเบี้ยประกันหลังหักค่าใช้จ่ายต่างๆ ไปลงทุนเพื่อสร้างผลกำไร และมีการบริหารความเสี่ยงจากการลงทุนในดัชนี เพื่อให้แน่ใจว่าสามารถจ่ายผลประโยชน์ที่การันตีได้ตามเงื่อนไขของกรมธรรม์", optB: "บริษัทจะนำเงินที่ลูกค้าจ่ายเบี้ยประกันหลังหักค่าใช้จ่ายต่างๆ ไปลงทุนเพื่อสร้างผลกำไร และมีการบริหารความเสี่ยงจากการลงทุนในดัชนี เพื่อให้แน่ใจว่าสามารถจ่ายผลประโยชน์ที่การันตีได้ 260% ของเงินต้น", correct: "A", explanation: "จ่ายผลประโยชน์ที่การันตีได้ 'ตามเงื่อนไขของกรมธรรม์'" },
+            { id: 19, type: 'ab', topic: "19. ความเสี่ยงการลงทุนในทองคำ", optA: "ทองคำถือว่าเป็นสินทรัพย์ปลอดภัยในช่วงที่เศรษฐกิจแย่ และมักจะมีราคาสวนทางกับหุ้นในช่วงที่ตลาดผันผวน AI จะเลือกถือทองคำเฉพาะในช่วงเศรฐกิจชะลอตัว (Slow growth) เท่านั้น และมีการกระจายความเสี่ยงโดยการถือคู่กับพันธบัตรรัฐบาลเพื่อเน้นรักษาเงินต้นให้ปลอดภัย", optB: "AI จะเลือกถือทองคำเฉพาะในช่วงเศรฐกิจฝืดเคือง (Stagflation) เท่านั้น และมีการกระจายความเสี่ยงโดยการถือคู่กับพันธบัตรรัฐบาลเพื่อเน้นรักษาเงินต้นให้ปลอดภัย เนื่องจากราคาทองคำมักไปในทิศทางเดียวกับหุ้น", correct: "A", explanation: "ทองคำมักราคาสวนทางกับหุ้น และถือเฉพาะช่วง Slow growth" },
+            { id: 20, type: 'ab', topic: "20. ความเสี่ยงจากอัตราแลกเปลี่ยน", optA: "ผลิตภัณฑ์นี้มีความเสี่ยงจากอัตราแลกเปลี่ยน แต่มีผลกระทบจำกัดเฉพาะในส่วนเงินปันผลที่ลูกค้าจะได้รับ เงินต้นของลูกค้ายังคงปลอดภัย 100% กรณีเงินบาทอ่อนค่า ณ วันครบกำหนดสัญญา เงินปันผลจะสูงขึ้น หากเงินบาทแข็งค่า เงินปันผลจะลดลง", optB: "ผลิตภัณฑ์นี้มีความเสี่ยงจากอัตราแลกเปลี่ยน ซึ่งส่งผลกระทบทั้งในส่วนเงินปันผลและเงินต้นของลูกค้าที่อาจปรับลดลงได้ไม่เกิน 2% หากเงินบาทแข็งค่า", correct: "A", explanation: "เงินต้นปลอดภัย 100% และถ้าบาทอ่อนปันผลจะสูงขึ้น" },
+            { id: 21, type: 'ab', topic: "21. ถ้าบริษัท Citi หรือ QuantCube ปิดไป", optA: "เนื่องจาก Citi เป็นบริษัทระดับโลกโอกาสที่จะได้ล้มละลายหรือประสบปัญหามีน้อยมาก แต่อย่างไรก็ตาม ในกรณีที่ผู้คำนวณดัชนีอ้างอิง Citi-QuantCube Multi-Asset Regime VT8 Index ได้ยกเลิกการคำนวณดัชนีระหว่างสัญญา หรือเกิดเหตุการณ์ที่มีความเสี่ยงกระทบต่อความน่าเชื่อถือ หรือความสามารถในการชำระหนี้ หรือเกิดเหตุการณ์อื่นๆ ที่กระทบต่อผลประโยชน์ของผู้เอาประกันภัยอย่างมีนัยสำคัญ เช่น ประกาศคณะกรรมการกำกับและส่งเสริมการประกอบธุรกิจประกันภัย และ/หรือหน่วยงานอื่นๆ ที่เกี่ยวข้อง จนทำให้ไม่สามารถดำเนินการตามสัญญาได้ เป็นต้น บริษัทขอสงวนสิทธิ์ในการจัดหาดัชนีใหม่มาทดแทนตามความเหมาะสม ไม่ส่งผลเสียต่อผลประโยชน์ของผู้เอาประกันภัยอย่างมีนัยสำคัญ ทั้งนี้ หากบริษัทไม่สามารถหาดัชนีใหม่มาทดแทนตามวรรคข้างต้นได้ บริษัทจะทำการชำระเป็นเงินสดตามมูลค่าผลประโยชน์ตามสัญญาอ้างอิงดัชนีที่บริษัทได้รับจากการยกเลิกการคำนวณดัชนีอ้างอิงข้างต้น โดยเร็วที่สุดเท่าที่จะกระทำได้ และเงื่อนไขการจ่ายผลตอบแทนตามดัชนีอ้างอิงเป็นอันสิ้นสุดลง โดยบริษัทจะดำเนินการออกบันทึกสลักหลังแจ้งการเปลี่ยนแปลงดังกล่าวให้ผู้เอาประกันภัยทราบเป็นลายลักษณ์อักษร", optB: "หากบริษัทไม่สามารถหาดัชนีใหม่มาทดแทนตามวรรคข้างต้นได้ บริษัทจะทำการโอนย้ายเงินลงทุนไปใน Global Index หรือ S&P 500 แทนตามมูลค่าผลประโยชน์ตามสัญญาอ้างอิงดัชนีที่บริษัทได้รับจากการยกเลิก", correct: "A", explanation: "บริษัทจะทำการ 'ชำระเป็นเงินสด' หากหาดัชนีทดแทนไม่ได้" },
+            { id: 22, type: 'ab', topic: "22. อัตราการมีส่วนร่วม 260% การันตีหรือไม่", optA: "ผู้เอาประกันภัยจะได้รับผลตอบแทนจากการปรับขึ้นของสินทรัพย์อ้างอิงในอัตรา 260% (2.6 เท่า) ของผลตอบแทนดัชนีอ้างอิง ตามเงื่อนไขของผลิตภัณฑ์ โดยผู้เอาประกันสามารถศึกษาสูตรการคำนวณผลตอบแทนตามดัชนีอ้างอิงเมื่อครบกำหนดสัญญาที่ระบุอยู่ในเอกสารประกอบการเสนอขายได้ ทั้งนี้ ลูกค้าจะได้รับเอกสารเก็บไว้เป็นหลักฐานอยู่ในชุดกรมธรรม์ เมื่อกรมธรรม์อนุมัติ", optB: "ผู้เอาประกันภัยจะได้รับการันตีผลตอบแทนขั้นต่ำจากการปรับขึ้นของสินทรัพย์อ้างอิงในอัตรา 260% (2.6 เท่า) ของเงินต้น ตามเงื่อนไขของผลิตภัณฑ์ที่ระบุอยู่ในเอกสารประกอบการเสนอขาย", correct: "A", explanation: "ลูกค้าจะได้รับเอกสารเก็บไว้เป็นหลักฐานเมื่อกรมธรรม์อนุมัติ" },
+            { id: 23, type: 'ab', topic: "23. หากเกิดสงครามโลกครั้งที่ 3", optA: "หากเกิดเหตุการ์สงครามโลกครั้งที่ 3 แน่นอนว่าจะมีผลกระทบทางเศรษฐกิจเป็นวงกว้าง ทั่วโลก อย่างไรก็ตาม ผลิตภัณฑ์ตัวนี้เป็นผลิตภัณฑ์ประกันชีวิต ซึ่งหากเกิดเหตุการณ์ความผันผวนทางเศรษฐกิจ อย่างน้อยเงินต้นของลูกค้าก็จะไม่กระทบไปด้วย (เงินต้นไม่หาย) และยังคงได้รับความคุ้มครองชีวิตตามสัญญากรมธรรม์", optB: "หากเกิดเหตุการ์สงครามโลกครั้งที่ 3 แน่นอนว่าจะมีผลกระทบทางเศรษฐกิจเป็นวงกว้าง ทั่วโลก อย่างไรก็ตาม ผลิตภัณฑ์ตัวนี้เป็นผลิตภัณฑ์กองทุนรวม ซึ่งหากเกิดเหตุการณ์ความผันผวนทางเศรษฐกิจ ลูกค้าสามารถใช้สิทธิในการเวนคืนได้ทันทีโดยไม่ขาดทุน", correct: "A", explanation: "ผลิตภัณฑ์นี้เป็นผลิตภัณฑ์ 'ประกันชีวิต' (เงินต้นไม่หาย)" },
+            { id: 24, type: 'ab', topic: "24. การบริหารดัชนีตลอด 15 ปี", optA: "การบริหารดัชนีนี้ มีทีมผู้เชี่ยวชาญภายในของCiti (Citi Researchers) ที่มีการติดตาม และทบทวนสัดส่วนการลงทุนอย่างสม่ำเสมอ เพื่อให้สอดคล้องกับสภาวะเศรษฐกิจที่เปลี่ยนแปลงไปในอนาคตเพื่อทำให้ผลตอบแทนเป็นไปอย่างดี รวมถึงมีกลไก volatility control เพื่อคุมความเสี่ยงอีกชั้น", optB: "การบริหารดัชนีนี้ มีทีมผู้เชี่ยวชาญภายในของQuantCube (QC Researchers) ที่มีการติดตาม และทบทวนสัดส่วนการลงทุนอย่างสม่ำเสมอ เพื่อให้สอดคล้องกับสภาวะเศรษฐกิจที่เปลี่ยนแปลงไป รวมถึงมีกลไก volatility control เพื่อคุมความเสี่ยง", correct: "A", explanation: "มีทีมผู้เชี่ยวชาญของ 'Citi (Citi Researchers)' และคุมความเสี่ยงอีกชั้น" },
+            { id: 25, type: 'ab', topic: "25. สาเหตุที่ผลตอบแทนต่ำปี 2024-2025", optA: "ผลตอบแทนที่ไม่ดีในช่วงปี 2024-2025 ไม่ได้เกิดจากกลยุทธ์การลงทุนที่ผิด แต่เกิดจากเหตุการณ์ไม่คาดคิดหลายอย่างที่เกิดขึ้นพร้อมกัน และความผันผวนที่สูงผิดปกติของตลาด ปี 2024 เป็นปีที่ตลาดผันผวนแรงจากเหตุการณ์เซอร์ไพรส์หลายเรื่อง ได้แก่ ธนาคารกลางญี่ปุ่น (BOJ) ขึ้นดอกเบี้ยแบบไม่คาดคิด ทำให้เงินเยนแข็งค่าเร็ว ส่งผลกระทบต่อกลยุทธ์ค่าเงิน หุ้นเทคโนโลยีผันผวนแรง จากผลประกอบการที่น่าผิดหวังของ Tesla และ Alphabet ความกังวลเศรษฐกิจสหรัฐฯ จากตัวเลขการจ้างงาน กดดันทั้งน้ำมัน ทองแดง และพันธบัตร เหตุการณ์เหล่านี้ทำให้ สินทรัพย์หลายประเภทปรับลงพร้อมกันในช่วงเวลาสั้น ๆ แม้ตลาดจะฟื้นตัวเร็ว แต่ กลไกควบคุมความผันผวน (Volatility Target) ทำให้ต้องลดสัดส่วนการลงทุนในช่วงตลาดผันผวน และไม่สามารถเข้าลงทุนในช่วงตลาดฟื้นตัวได้อย่างเต็มที่ ปี 2025 ตลาดยังคงผันผวนและแกว่งแรง โดยเฉพาะจากเหตุการณ์ Liberation Day เมื่อความผันผวนสูง กลไกควบคุมความผันผวน (Volatility Target) จะลดสัดส่วนการลงทุนลงมาก และไม่สามารถเข้าลงทุนในช่วงตลาดฟื้นตัวได้อย่างเต็มที่ ประกอบกับการ หักค่าใช้จ่าย (Decrement) 2% ต่อปี ส่งผลให้ผลตอบแทนโดยรวมออกมาไม่โดดเด่น", optB: "ผลตอบแทนที่ไม่ดีในช่วงปี 2024-2025 เกิดจากกลยุทธ์การลงทุนที่ประเมินตัวเลข GDP ของรัฐบาลผิดพลาด ปี 2024 เป็นปีที่ตลาดผันผวนแรงจากเหตุการณ์เซอร์ไพรส์หลายเรื่อง ได้แก่ ธนาคารกลางสหรัฐฯ (Fed) ลดดอกเบี้ยแบบไม่คาดคิด ทำให้เงินดอลลาร์อ่อนค่าเร็ว ส่งผลกระทบต่อกลยุทธ์ค่าเงิน รวมถึงเหตุการณ์ Liberation Day ในปี 2025 ทำให้การเข้าลงทุนในช่วงฟื้นตัวทำได้ยาก", correct: "A", explanation: "ระบุรายละเอียดเหตุการณ์ของ BOJ, หุ้นเทคฯ และ Liberation Day ครบถ้วน" }
         ];
 
         function App() {
@@ -155,13 +207,18 @@
             const [timer, setTimer] = useState(0);
             const [intervalId, setIntervalId] = useState(null);
             const [logs, setLogs] = useState([]);
+            
             const [showFeedback, setShowFeedback] = useState(false);
             const [selectedOpt, setSelectedOpt] = useState(null);
+            const [interactiveAns1, setInteractiveAns1] = useState(''); 
+            const [interactiveAns2, setInteractiveAns2] = useState(''); 
+            
             const [attemptCount, setAttemptCount] = useState(1);
             const [isSendingEmail, setIsSendingEmail] = useState(false);
+            const [showRetryConfirm, setShowRetryConfirm] = useState(false);
 
             // ==========================================
-            // SUPABASE API CALLS (ตารางแยกเฉพาะระบบนี้)
+            // SUPABASE API CALLS 
             // ==========================================
             const saveEmployeeToSupabase = async (employeeData) => {
                 try {
@@ -212,7 +269,6 @@
                 }
             }, [step, showFeedback]);
 
-            // --- HANDLERS ---
             const handleLogin = (e) => {
                 e.preventDefault();
                 setLoginError('');
@@ -243,6 +299,8 @@
             const startQuiz = () => {
                 setStep('quiz');
                 setTimer(0);
+                setInteractiveAns1('');
+                setInteractiveAns2('');
             };
 
             const handleABAnswer = (option) => {
@@ -272,7 +330,10 @@
             const nextQuestion = async () => {
                 setShowFeedback(false);
                 setSelectedOpt(null);
+                setInteractiveAns1('');
+                setInteractiveAns2('');
                 setTimer(0);
+                
                 if (currentIndex + 1 < questions.length) {
                     setCurrentIndex(currentIndex + 1);
                 } else {
@@ -293,12 +354,19 @@
                 }
             };
 
-            const handleRetry = () => {
+            const handleRetryClick = () => {
+                setShowRetryConfirm(true);
+            };
+
+            const confirmRetry = () => {
                 initQuestions();
                 setCurrentIndex(0);
                 setScore(0);
                 setLogs([]);
                 setAttemptCount(c => c + 1);
+                setInteractiveAns1('');
+                setInteractiveAns2('');
+                setShowRetryConfirm(false);
                 setStep('quiz');
             };
 
@@ -318,29 +386,40 @@
 
             const isPassed = score === questions.length;
 
-            // --- UI RENDERS ---
             if (step === 'login') {
                 return (
-                    <div className="min-h-screen flex flex-col items-center justify-center p-4 font-sans">
-                        <div className="bg-white max-w-md w-full rounded-2xl shadow-xl overflow-hidden border border-slate-200">
-                            <div className="bg-[#0f172a] p-8 text-white text-center">
-                                <Icons.ShieldCheck className="w-16 h-16 mx-auto mb-4 text-sky-400" />
-                                <h2 className="text-2xl font-bold">Knowledge Verification</h2>
-                                <p className="text-slate-300 text-sm mt-2">US Multi-Asset Index</p>
-                            </div>
-                            <form onSubmit={handleLogin} className="p-8 space-y-6">
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-2">รหัสพนักงาน (Employee ID)</label>
-                                    <div className="relative">
-                                        <Icons.Briefcase className="absolute left-3.5 top-3.5 w-5 h-5 text-slate-400" />
-                                        <input required type="text" value={loginId} onChange={e => setLoginId(e.target.value)}
-                                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 font-mono text-lg transition-all outline-none" placeholder="ระบุรหัสพนักงาน..." />
-                                    </div>
+                    <div className="app-container">
+                        <div className="bg-primary h-64 w-full rounded-b-[40px] absolute top-0 left-0 z-0"></div>
+                        <div className="relative z-10 flex flex-col flex-1 px-6 pt-12">
+                            <div className="text-center text-white mb-6 animate-slide-in">
+                                <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/30 shadow-inner">
+                                    <Icons.ShieldCheck className="w-8 h-8 text-white" />
                                 </div>
-                                <button type="submit" className="w-full bg-[#0ea5e9] hover:bg-[#0284c7] text-white font-bold py-3.5 rounded-lg shadow-md transition-colors flex items-center justify-center">
-                                    เข้าสู่ระบบ <Icons.ChevronRight className="ml-2 w-5 h-5" />
-                                </button>
-                            </form>
+                                <h1 className="text-2xl font-black tracking-tight mb-1">Knowledge Verification</h1>
+                                <p className="text-primaryLight text-xs font-bold uppercase tracking-widest">US Multi-Asset Index</p>
+                            </div>
+
+                            <div className="bg-card p-8 rounded-[32px] shadow-soft-3d w-full animate-slide-in border border-slate-100" style={{animationDelay: '0.1s'}}>
+                                <form onSubmit={handleLogin} className="space-y-5">
+                                    <div>
+                                        <label className="block text-[11px] font-black text-textMuted mb-2 uppercase tracking-widest ml-1">Employee ID</label>
+                                        <div className="relative">
+                                            <Icons.Briefcase className="absolute left-4 top-3.5 w-5 h-5 text-primary/50" />
+                                            <input required type="text" value={loginId} onChange={e => setLoginId(e.target.value)}
+                                                className="w-full pl-12 pr-4 py-3.5 bg-surface border-none rounded-2xl focus:ring-2 focus:ring-primary/20 font-bold text-textMain transition-all outline-none text-sm shadow-inner-soft" placeholder="e.g. admin หรือรหัสพนักงาน" />
+                                        </div>
+                                    </div>
+                                    <button type="submit" className="w-full bg-primary hover:bg-primaryDark text-white font-black py-4 rounded-2xl shadow-btn-primary transition-all flex items-center justify-center text-sm uppercase tracking-wider mt-2 btn-modern">
+                                        เข้าสู่ระบบ <Icons.ChevronRight className="ml-1 w-5 h-5" />
+                                    </button>
+                                </form>
+                            </div>
+                            
+                            <div className="mt-auto pb-6 pt-6 text-center animate-fade-in-up" style={{animationDelay: '0.2s'}}>
+                                <p className="text-[10px] font-bold text-textMuted uppercase tracking-widest">
+                                    Powered by <span className="text-primary">PRU ACADEMY</span>
+                                </p>
+                            </div>
                         </div>
                     </div>
                 );
@@ -348,16 +427,18 @@
 
             if (step === 'notfound') {
                 return (
-                    <div className="min-h-screen flex flex-col items-center justify-center p-4">
-                        <div className="bg-white max-w-md w-full rounded-2xl shadow-xl p-8 text-center border border-slate-200">
-                            <Icons.XCircle className="w-16 h-16 mx-auto mb-4 text-rose-500" />
-                            <h2 className="text-2xl font-bold text-slate-800 mb-2">ไม่พบข้อมูลในระบบ</h2>
-                            <p className="text-slate-600 mb-8">รหัสพนักงาน {loginId} ไม่มีในฐานข้อมูล ท่านต้องการลงทะเบียนใหม่หรือไม่?</p>
-                            <div className="space-y-4">
-                                <button onClick={() => setStep('register')} className="w-full bg-[#0f172a] text-white font-bold py-3.5 rounded-lg shadow-md flex items-center justify-center">
+                    <div className="app-container justify-center p-6">
+                        <div className="bg-card p-8 rounded-[32px] shadow-soft-3d text-center border border-slate-100 animate-slide-in">
+                            <div className="w-20 h-20 bg-red-50 text-danger rounded-[24px] flex items-center justify-center mx-auto mb-6 shadow-inner-soft border border-red-100">
+                                <Icons.XCircle className="w-10 h-10" />
+                            </div>
+                            <h2 className="text-xl font-black text-textMain mb-2">ไม่พบข้อมูลในระบบ</h2>
+                            <p className="text-textMuted text-xs font-bold leading-relaxed mb-8 px-2">รหัสพนักงาน <span className="text-danger">"{loginId}"</span> ไม่มีในฐานข้อมูล ท่านต้องการลงทะเบียนใหม่หรือไม่?</p>
+                            <div className="space-y-3">
+                                <button onClick={() => setStep('register')} className="w-full bg-primary text-white font-black py-4 rounded-2xl shadow-btn-primary flex items-center justify-center text-sm btn-modern">
                                     <Icons.PlusCircle className="mr-2 w-5 h-5"/> ลงทะเบียนพนักงานใหม่
                                 </button>
-                                <button onClick={() => { setStep('login'); setLoginId(''); }} className="w-full bg-slate-100 text-slate-700 font-bold py-3.5 rounded-lg hover:bg-slate-200">
+                                <button onClick={() => { setStep('login'); setLoginId(''); }} className="w-full bg-surface text-textMuted font-black py-4 rounded-2xl hover:bg-gray-200 transition-colors text-sm">
                                     กลับไปกรอกรหัสใหม่
                                 </button>
                             </div>
@@ -368,29 +449,30 @@
 
             if (step === 'register') {
                 return (
-                    <div className="min-h-screen flex flex-col items-center justify-center p-4">
-                        <div className="bg-white max-w-md w-full rounded-2xl shadow-xl overflow-hidden border border-slate-200">
-                            <div className="bg-[#0f172a] p-6 text-white text-center">
-                                <h2 className="text-xl font-bold">ลงทะเบียนพนักงานใหม่</h2>
+                    <div className="app-container overflow-y-auto custom-scrollbar p-6 pt-10">
+                        <div className="bg-card p-8 rounded-[32px] shadow-soft-3d border border-slate-100 animate-slide-in">
+                            <div className="text-center mb-8">
+                                <div className="w-14 h-14 bg-blue-50 text-primary rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner-soft"><Icons.User className="w-6 h-6"/></div>
+                                <h2 className="text-lg font-black text-textMain">ลงทะเบียนพนักงานใหม่</h2>
                             </div>
-                            <form onSubmit={handleRegister} className="p-8 space-y-4">
+                            <form onSubmit={handleRegister} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1">รหัสพนักงาน</label>
-                                    <input required type="text" value={regForm.id} onChange={e => setRegForm({...regForm, id: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500" />
+                                    <label className="block text-[10px] font-black text-textMuted mb-1.5 uppercase tracking-wider ml-1">รหัสพนักงาน</label>
+                                    <input required type="text" value={regForm.id} onChange={e => setRegForm({...regForm, id: e.target.value})} className="w-full px-4 py-3.5 bg-surface border-none rounded-2xl text-sm font-bold text-textMain focus:ring-2 focus:ring-primary/20 outline-none shadow-inner-soft" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1">ชื่อ-นามสกุล (พร้อมชื่อเล่น)</label>
-                                    <input required type="text" value={regForm.name} onChange={e => setRegForm({...regForm, name: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500" />
+                                    <label className="block text-[10px] font-black text-textMuted mb-1.5 uppercase tracking-wider ml-1">ชื่อ-นามสกุล</label>
+                                    <input required type="text" value={regForm.name} onChange={e => setRegForm({...regForm, name: e.target.value})} className="w-full px-4 py-3.5 bg-surface border-none rounded-2xl text-sm font-bold text-textMain focus:ring-2 focus:ring-primary/20 outline-none shadow-inner-soft" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1">สาขา / สังกัด (Zone)</label>
-                                    <input required type="text" value={regForm.zone} onChange={e => setRegForm({...regForm, zone: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500" />
+                                    <label className="block text-[10px] font-black text-textMuted mb-1.5 uppercase tracking-wider ml-1">สาขา / สังกัด (Zone)</label>
+                                    <input required type="text" value={regForm.zone} onChange={e => setRegForm({...regForm, zone: e.target.value})} className="w-full px-4 py-3.5 bg-surface border-none rounded-2xl text-sm font-bold text-textMain focus:ring-2 focus:ring-primary/20 outline-none shadow-inner-soft" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1">อีเมลบริษัท</label>
-                                    <input required type="email" value={regForm.email} onChange={e => setRegForm({...regForm, email: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500" />
+                                    <label className="block text-[10px] font-black text-textMuted mb-1.5 uppercase tracking-wider ml-1">อีเมลบริษัท</label>
+                                    <input required type="email" value={regForm.email} onChange={e => setRegForm({...regForm, email: e.target.value})} className="w-full px-4 py-3.5 bg-surface border-none rounded-2xl text-sm font-bold text-textMain focus:ring-2 focus:ring-primary/20 outline-none shadow-inner-soft" />
                                 </div>
-                                <button type="submit" className="w-full bg-[#0ea5e9] text-white font-bold py-3.5 rounded-lg mt-4 shadow-md">บันทึกลง Supabase และเข้าสู่ระบบ</button>
+                                <button type="submit" className="w-full bg-primary text-white font-black py-4 rounded-2xl mt-6 shadow-btn-primary btn-modern text-sm">บันทึกข้อมูลและเข้าสู่ระบบ</button>
                             </form>
                         </div>
                     </div>
@@ -399,20 +481,21 @@
 
             if (step === 'confirm') {
                 return (
-                    <div className="min-h-screen flex flex-col items-center justify-center p-4">
-                        <div className="bg-white max-w-md w-full rounded-2xl shadow-xl p-8 text-center border border-slate-200">
-                            <div className="w-20 h-20 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <Icons.User className="w-10 h-10" />
+                    <div className="app-container justify-center p-6">
+                        <div className="bg-card p-8 rounded-[32px] shadow-soft-3d text-center border border-slate-100 animate-slide-in">
+                            <div className="w-24 h-24 bg-blue-50 text-primary rounded-[28px] flex items-center justify-center mx-auto mb-6 shadow-inner-soft border border-blue-100 transform rotate-3">
+                                <Icons.User className="w-10 h-10 drop-shadow-sm" />
                             </div>
-                            <h2 className="text-2xl font-bold text-slate-800 mb-1">ยืนยันตัวตน</h2>
+                            <h2 className="text-2xl font-black text-textMain mb-2">ยืนยันตัวตน</h2>
+                            <p className="text-[11px] font-bold text-textMuted uppercase tracking-widest mb-6">Please verify your info</p>
                             
-                            <div className="bg-slate-50 rounded-xl p-4 text-left border border-slate-200 mb-8 mt-4">
-                                <div className="mb-2"><span className="text-slate-400 text-sm">รหัสพนักงาน:</span> <span className="font-bold text-slate-800 float-right">{tempUser.id}</span></div>
-                                <div className="mb-2"><span className="text-slate-400 text-sm">ชื่อ-นามสกุล:</span> <span className="font-bold text-slate-800 float-right">{tempUser.name}</span></div>
-                                <div className="mb-2"><span className="text-slate-400 text-sm">สังกัด/โซน:</span> <span className="font-bold text-slate-800 float-right">{tempUser.zone}</span></div>
+                            <div className="bg-surface rounded-2xl p-5 text-left border border-slate-100 mb-8 shadow-inner-soft space-y-3">
+                                <div className="flex justify-between items-center"><span className="text-textMuted text-xs font-bold">รหัสพนักงาน:</span> <span className="font-black text-textMain text-sm bg-white px-2 py-1 rounded shadow-sm">{tempUser.id}</span></div>
+                                <div className="flex justify-between items-center"><span className="text-textMuted text-xs font-bold">ชื่อ-นามสกุล:</span> <span className="font-black text-textMain text-sm text-right w-1/2 line-clamp-1">{tempUser.name}</span></div>
+                                <div className="flex justify-between items-center"><span className="text-textMuted text-xs font-bold">สังกัด/โซน:</span> <span className="font-black text-primary text-sm bg-blue-50 px-2 py-1 rounded shadow-sm">{tempUser.zone}</span></div>
                             </div>
 
-                            <button onClick={confirmUser} className="w-full bg-[#0f172a] text-white font-bold py-3.5 rounded-lg shadow-md mb-3 flex justify-center items-center">
+                            <button onClick={confirmUser} className="w-full bg-primary text-white font-black py-4 rounded-2xl shadow-btn-primary flex justify-center items-center text-sm btn-modern">
                                 <Icons.CheckCircle className="mr-2 w-5 h-5"/> ยืนยัน (Confirm)
                             </button>
                         </div>
@@ -422,20 +505,30 @@
 
             if (step === 'intro') {
                 return (
-                    <div className="min-h-screen flex items-center justify-center p-4">
-                        <div className="bg-white max-w-3xl w-full rounded-2xl shadow-xl p-8 md:p-12 border border-slate-200">
-                            <h2 className="text-3xl font-extrabold text-[#0f172a] mb-6 border-b pb-4 flex items-center">
-                                <Icons.FileText className="mr-3 text-sky-500 w-8 h-8"/> กติกาการทดสอบ
-                            </h2>
-                            <div className="space-y-5 text-slate-600 text-lg mb-8">
-                                <p className="flex items-start"><Icons.Check className="w-6 h-6 text-sky-500 mr-3 shrink-0 mt-0.5" /> <span>ครอบคลุมเนื้อหา FAQ ทั้งหมด <strong>25 ข้อ</strong></span></p>
-                                <p className="flex items-start"><Icons.Check className="w-6 h-6 text-sky-500 mr-3 shrink-0 mt-0.5" /> <span>ข้อมูลในแบบทดสอบคัดลอกมาจากเอกสาร <strong>Word-by-Word 100%</strong></span></p>
-                                <p className="flex items-start bg-rose-50 p-5 rounded-xl border border-rose-200 text-rose-800 font-semibold shadow-sm">
-                                    <Icons.AlertTriangle className="w-6 h-6 text-rose-500 mr-3 shrink-0 mt-0.5" /> 
-                                    <span>เกณฑ์การผ่านคือ 100% (25/25) เท่านั้น หากผิดแม้แต่ข้อเดียว ต้องกลับมาเริ่มทำใหม่ทั้งหมด</span>
-                                </p>
+                    <div className="app-container p-6 pt-10 overflow-y-auto custom-scrollbar flex flex-col">
+                        <div className="bg-card rounded-[32px] shadow-soft-3d p-8 border border-slate-100 animate-slide-in flex-1 flex flex-col">
+                            <div className="w-16 h-16 bg-blue-50 text-primary rounded-2xl flex items-center justify-center mb-6 shadow-inner-soft border border-blue-100">
+                                <Icons.FileText className="w-8 h-8"/>
                             </div>
-                            <button onClick={startQuiz} className="w-full bg-[#0f172a] hover:bg-[#1e293b] text-white text-xl font-bold py-5 rounded-xl shadow-lg transition-transform hover:scale-105">
+                            <h2 className="text-2xl font-black text-textMain mb-2">กติกาการทดสอบ</h2>
+                            <p className="text-[10px] font-bold text-textMuted uppercase tracking-widest mb-8">Rules & Regulations</p>
+                            
+                            <div className="space-y-4 text-textMain text-sm font-bold flex-1">
+                                <div className="flex items-start bg-surface p-4 rounded-2xl border border-slate-100">
+                                    <div className="bg-white p-1.5 rounded-lg shadow-sm mr-3 shrink-0"><Icons.Check className="w-4 h-4 text-primary" /></div>
+                                    <span className="leading-relaxed">ครอบคลุมเนื้อหา FAQ ทั้งหมด <strong className="text-primary text-base">25 ข้อ</strong></span>
+                                </div>
+                                <div className="flex items-start bg-surface p-4 rounded-2xl border border-slate-100">
+                                    <div className="bg-white p-1.5 rounded-lg shadow-sm mr-3 shrink-0"><Icons.Check className="w-4 h-4 text-primary" /></div>
+                                    <span className="leading-relaxed">ข้อมูลในแบบทดสอบคัดลอกมาจากเอกสาร <strong className="text-primary text-base">Word-by-Word 100%</strong></span>
+                                </div>
+                                <div className="flex items-start bg-red-50 p-4 rounded-2xl border border-red-100 shadow-inner-soft mt-6">
+                                    <div className="bg-white p-1.5 rounded-lg shadow-sm mr-3 shrink-0"><Icons.AlertTriangle className="w-4 h-4 text-danger" /></div>
+                                    <span className="text-danger leading-relaxed">เกณฑ์การผ่านคือ 100% (25/25) เท่านั้น หากผิดแม้แต่ข้อเดียว ต้องกลับมาเริ่มทำใหม่ทั้งหมด</span>
+                                </div>
+                            </div>
+                            
+                            <button onClick={startQuiz} className="w-full bg-textMain text-white text-sm uppercase tracking-wider font-black py-4 rounded-2xl shadow-lg mt-8 btn-modern">
                                 เริ่มทำแบบทดสอบ (ครั้งที่ {attemptCount})
                             </button>
                         </div>
@@ -447,118 +540,141 @@
                 const currentQ = questions[currentIndex];
                 const progress = ((currentIndex) / questions.length) * 100;
 
-                const InteractiveQuestion = () => {
-                    const [sel1, setSel1] = useState('');
-                    const [sel2, setSel2] = useState('');
-
-                    const renderTextWithDropdowns = () => {
-                        let parts = currentQ.text.split('{DROP1}');
-                        let content = [];
-                        content.push(<span key="1">{parts[0]}</span>);
+                const renderTextWithDropdowns = () => {
+                    let parts = currentQ.text.split('{DROP1}');
+                    let content = [];
+                    content.push(<span key="1" className="leading-loose">{parts[0]}</span>);
+                    content.push(
+                        <select key="d1" value={interactiveAns1} onChange={e => setInteractiveAns1(e.target.value)} disabled={showFeedback} className="mx-2 p-2 px-3 border-2 border-primary/30 rounded-xl bg-blue-50 font-bold text-primary outline-none shadow-sm focus:ring-2 focus:ring-primary/20 appearance-none text-sm">
+                            <option value="">-- เลือกคำตอบ --</option>
+                            {currentQ.options1.map((o, i) => <option key={i} value={o}>{o}</option>)}
+                        </select>
+                    );
+                    if (currentQ.options2) {
+                        let parts2 = parts[1].split('{DROP2}');
+                        content.push(<span key="2" className="leading-loose">{parts2[0]}</span>);
                         content.push(
-                            <select key="d1" value={sel1} onChange={e => setSel1(e.target.value)} disabled={showFeedback} className="mx-2 p-2 border border-sky-400 rounded bg-sky-50 font-semibold text-sky-800 outline-none">
+                            <select key="d2" value={interactiveAns2} onChange={e => setInteractiveAns2(e.target.value)} disabled={showFeedback} className="mx-2 p-2 px-3 border-2 border-primary/30 rounded-xl bg-blue-50 font-bold text-primary outline-none shadow-sm focus:ring-2 focus:ring-primary/20 appearance-none text-sm">
                                 <option value="">-- เลือกคำตอบ --</option>
-                                {currentQ.options1.map((o, i) => <option key={i} value={o}>{o}</option>)}
+                                {currentQ.options2.map((o, i) => <option key={i} value={o}>{o}</option>)}
                             </select>
                         );
-                        if (currentQ.options2) {
-                            let parts2 = parts[1].split('{DROP2}');
-                            content.push(<span key="2">{parts2[0]}</span>);
-                            content.push(
-                                <select key="d2" value={sel2} onChange={e => setSel2(e.target.value)} disabled={showFeedback} className="mx-2 p-2 border border-sky-400 rounded bg-sky-50 font-semibold text-sky-800 outline-none">
-                                    <option value="">-- เลือกคำตอบ --</option>
-                                    {currentQ.options2.map((o, i) => <option key={i} value={o}>{o}</option>)}
-                                </select>
-                            );
-                            content.push(<span key="3">{parts2[1]}</span>);
-                        } else {
-                            content.push(<span key="2">{parts[1]}</span>);
-                        }
-                        return content;
-                    };
-
-                    const isReady = currentQ.options2 ? (sel1 && sel2) : sel1;
-
-                    return (
-                        <div className="p-8 bg-white text-xl leading-relaxed text-slate-700">
-                            <p className="mb-8">{renderTextWithDropdowns()}</p>
-                            {!showFeedback && (
-                                <button 
-                                    disabled={!isReady}
-                                    onClick={() => handleInteractiveAnswer(sel1, sel2)} 
-                                    className={`px-8 py-3 rounded-lg font-bold text-white transition-all ${isReady ? 'bg-sky-600 hover:bg-sky-700 shadow-md' : 'bg-slate-300 cursor-not-allowed'}`}>
-                                    ยืนยันคำตอบ
-                                </button>
-                            )}
-                        </div>
-                    );
+                        content.push(<span key="3" className="leading-loose">{parts2[1]}</span>);
+                    } else {
+                        content.push(<span key="2" className="leading-loose">{parts[1]}</span>);
+                    }
+                    return content;
                 };
 
-                return (
-                    <div className="min-h-screen bg-slate-50 p-4 md:p-8 flex flex-col items-center">
-                        <div className="max-w-4xl w-full mb-6 mt-4">
-                            <div className="flex justify-between items-end mb-2">
-                                <div className="text-xl font-bold text-slate-800">ข้อที่ {currentIndex + 1} <span className="text-slate-400 text-base font-medium">/ {questions.length}</span></div>
-                                <div className="flex items-center text-slate-600 bg-white px-4 py-1.5 rounded-lg shadow-sm font-mono border border-slate-200">
-                                    <Icons.Clock className="w-4 h-4 mr-2 text-sky-500" /> {formatTime(timer)}
-                                </div>
-                            </div>
-                            <div className="w-full bg-slate-200 rounded-full h-2">
-                                <div className="bg-[#0ea5e9] h-2 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
-                            </div>
-                        </div>
+                const isReadyInteractive = currentQ.options2 ? (interactiveAns1 && interactiveAns2) : interactiveAns1;
 
-                        <div className="max-w-4xl w-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
-                            <div className="bg-[#0f172a] p-6 md:p-8">
-                                <h3 className="text-2xl font-bold text-white leading-tight">{currentQ.topic}</h3>
+                return (
+                    <div className="app-container bg-surface flex flex-col">
+                        {/* Header & Progress */}
+                        <div className="pt-6 pb-2 px-6 flex flex-col shrink-0">
+                            <div className="flex justify-between items-center mb-4">
+                                <div className="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm cursor-pointer hover:bg-gray-50" onClick={() => { if(confirm("ต้องการออกจากการทำแบบทดสอบใช่หรือไม่?")) setStep('home'); }}><Icons.ChevronLeft className="w-5 h-5 text-textMuted"/></div>
+                                <h2 className="font-black text-textMain text-sm uppercase tracking-widest">Question {currentIndex + 1}/{questions.length}</h2>
+                                <div className="flex items-center text-primary bg-white px-3 py-1.5 rounded-lg shadow-sm font-black text-xs border border-blue-50">
+                                    <Icons.Clock className="w-3.5 h-3.5 mr-1.5" /> {formatTime(timer)}
+                                </div>
                             </div>
                             
-                            {currentQ.type === 'ab' ? (
-                                <div className="p-6 md:p-8 grid md:grid-cols-2 gap-6 bg-slate-50 relative">
-                                    {currentQ.displayOpts.map((opt, idx) => {
-                                        const isSelected = selectedOpt === opt;
-                                        let cardClass = "p-6 rounded-xl border-2 cursor-pointer transition-all flex items-start flex-col ";
-                                        if (!showFeedback) {
-                                            cardClass += "border-slate-200 bg-white hover:border-sky-400 hover:shadow-md";
-                                        } else {
-                                            cardClass += "cursor-default ";
-                                            if (opt.isCorrect) cardClass += isSelected ? "border-emerald-500 bg-emerald-50" : "border-emerald-400 bg-white";
-                                            else cardClass += isSelected ? "border-rose-500 bg-rose-50" : "border-slate-200 opacity-40 bg-white";
-                                        }
-
-                                        return (
-                                            <div key={idx} onClick={() => !showFeedback && handleABAnswer(opt)} className={cardClass}>
-                                                <div className={`shrink-0 px-3 py-1 rounded text-sm font-bold mb-3 transition-colors ${showFeedback && opt.isCorrect ? 'bg-emerald-500 text-white' : showFeedback && isSelected && !opt.isCorrect ? 'bg-rose-500 text-white' : 'bg-slate-200 text-slate-600'}`}>
-                                                    ตัวเลือก {idx === 0 ? 'A' : 'B'}
-                                                </div>
-                                                <div className={`text-lg leading-relaxed ${showFeedback && isSelected && !opt.isCorrect ? 'text-rose-900' : 'text-slate-700'}`}>
-                                                    {opt.text}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                            {/* ✅ Progress Bar ใหม่: ย้ายเปอร์เซ็นต์เกาะที่หัวขบวน พร้อมไฟเรืองแสง Smooth Transition */}
+                            <div className="flex items-center w-full relative h-6 mt-1 mb-2">
+                                <div className="w-full bg-slate-200/60 rounded-full h-2.5 shadow-inner-soft relative flex items-center">
+                                    <div
+                                        className="absolute left-0 h-2.5 rounded-full transition-all duration-[800ms] ease-out bg-gradient-to-r from-cyan-400 to-blue-600"
+                                        style={{ width: `${progress}%`, boxShadow: '0 0 12px rgba(37, 99, 235, 0.7)' }}
+                                    >
+                                        <div className="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 bg-white text-blue-600 font-black text-[10px] px-2 py-0.5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-blue-100 z-10 transition-all duration-[800ms]">
+                                            {Math.round(progress)}%
+                                        </div>
+                                    </div>
                                 </div>
-                            ) : (
-                                <InteractiveQuestion />
-                            )}
+                            </div>
                         </div>
 
-                        {showFeedback && (
-                            <div className={`max-w-4xl w-full rounded-2xl p-6 md:p-8 border-l-8 shadow-md flex flex-col md:flex-row items-center justify-between animate-fade-in-up
-                                ${logs[logs.length-1].isCorrect ? 'bg-emerald-50 border-emerald-500' : 'bg-rose-50 border-rose-500'}`}>
-                                <div className="flex-1 mb-6 md:mb-0 md:mr-8">
-                                    <h4 className={`text-xl font-bold flex items-center mb-2 ${logs[logs.length-1].isCorrect ? 'text-emerald-700' : 'text-rose-700'}`}>
-                                        {logs[logs.length-1].isCorrect ? <Icons.CheckCircle className="w-6 h-6 mr-2" /> : <Icons.AlertTriangle className="w-6 h-6 mr-2" />}
-                                        {logs[logs.length-1].isCorrect ? 'ถูกต้อง!' : 'ผิดพลาด!'}
-                                    </h4>
-                                    <p className="text-slate-700 text-lg"><strong>คำอธิบาย/ข้อเท็จจริง:</strong> {currentQ.explanation}</p>
+                        {/* Quiz Card */}
+                        <div className="flex-1 bg-card rounded-t-[40px] shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] flex flex-col relative overflow-hidden border-t border-slate-100 mt-2">
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 pb-32">
+                                <div className="bg-surface p-5 rounded-[24px] mb-8 border border-slate-100 shadow-inner-soft relative">
+                                    <div className="absolute top-[-12px] right-4 bg-primary text-white text-[9px] font-black px-3 py-1 rounded-full shadow-sm uppercase tracking-widest">Topic {currentQ.id}</div>
+                                    <h3 className="text-[15px] font-black text-textMain leading-relaxed">{currentQ.topic}</h3>
                                 </div>
-                                <button onClick={nextQuestion} className={`shrink-0 px-8 py-4 rounded-xl font-bold text-white shadow-md flex items-center transition-transform hover:scale-105
-                                    ${logs[logs.length-1].isCorrect ? 'bg-emerald-600' : 'bg-[#0f172a]'}`}>
-                                    {currentIndex + 1 === questions.length ? 'ดูผลสรุปและส่งบันทึก Supabase' : 'ไปข้อถัดไป'} <Icons.ChevronRight className="ml-2 w-5 h-5" />
-                                </button>
+                                
+                                {currentQ.type === 'ab' ? (
+                                    <div className="space-y-3.5">
+                                        {currentQ.displayOpts.map((opt, idx) => {
+                                            const isSelected = selectedOpt === opt;
+                                            const colors = [
+                                                { bg: 'bg-[#4D7EFE]', text: 'text-white' },
+                                                { bg: 'bg-[#FF975C]', text: 'text-white' }
+                                            ];
+                                            const color = colors[idx];
+
+                                            let cardClass = "flex items-start p-4 rounded-2xl cursor-pointer transition-all duration-200 border-2 ";
+                                            if (!showFeedback) {
+                                                cardClass += isSelected ? `border-textMain bg-white shadow-md transform scale-[1.02]` : 'border-transparent bg-surface hover:bg-gray-200';
+                                            } else {
+                                                cardClass += "cursor-default ";
+                                                if (opt.isCorrect) cardClass += isSelected ? "border-accentGreen bg-[#E2F8E9]" : "border-accentGreen bg-white";
+                                                else cardClass += isSelected ? "border-danger bg-red-50" : "border-transparent bg-surface opacity-40";
+                                            }
+
+                                            return (
+                                                <div key={idx} onClick={() => !showFeedback && handleABAnswer(opt)} className={cardClass}>
+                                                    <div className={`w-10 h-10 rounded-[14px] flex items-center justify-center font-black shadow-sm mr-4 shrink-0 transition-colors ${showFeedback && opt.isCorrect ? 'bg-accentGreen text-white' : showFeedback && isSelected && !opt.isCorrect ? 'bg-danger text-white' : color.bg + ' ' + color.text}`}>
+                                                        {idx === 0 ? 'A' : 'B'}
+                                                    </div>
+                                                    <span className={`flex-1 font-bold text-[13px] leading-relaxed pt-1 ${showFeedback && isSelected && !opt.isCorrect ? 'text-danger' : 'text-textMain'}`}>
+                                                        {opt.text}
+                                                    </span>
+                                                    {!showFeedback && (
+                                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ml-3 shrink-0 transition-colors mt-2 ${isSelected ? 'border-textMain' : 'border-gray-300 bg-white'}`}>
+                                                            {isSelected && <div className="w-2.5 h-2.5 bg-textMain rounded-full"></div>}
+                                                        </div>
+                                                    )}
+                                                    {showFeedback && opt.isCorrect && <Icons.CheckCircle className="w-6 h-6 ml-3 mt-1.5 text-accentGreen shrink-0"/>}
+                                                    {showFeedback && isSelected && !opt.isCorrect && <Icons.XCircle className="w-6 h-6 ml-3 mt-1.5 text-danger shrink-0"/>}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="p-6 bg-white text-[15px] text-textMain font-bold">
+                                        <p className="mb-8">{renderTextWithDropdowns()}</p>
+                                        {!showFeedback && (
+                                            <button 
+                                                disabled={!isReadyInteractive}
+                                                onClick={() => handleInteractiveAnswer(interactiveAns1, interactiveAns2)} 
+                                                className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-wider transition-all shadow-soft-3d btn-modern ${isReadyInteractive ? 'bg-primary text-white hover:bg-primaryDark' : 'bg-surface text-textMuted cursor-not-allowed shadow-none'}`}>
+                                                ยืนยันคำตอบ
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
                             </div>
-                        )}
+
+                            {showFeedback && (
+                                <div className="absolute bottom-0 w-full bg-white px-5 py-5 border-t border-slate-100 z-20 animate-slide-in rounded-b-[40px] shadow-[0_-15px_30px_-10px_rgba(0,0,0,0.1)]">
+                                    <div className={`p-4 rounded-2xl mb-4 flex items-start border ${logs[logs.length-1].isCorrect ? 'bg-[#E2F8E9] border-accentGreen/30' : 'bg-red-50 border-danger/30'}`}>
+                                        <div className={`mt-0.5 mr-3 shrink-0 ${logs[logs.length-1].isCorrect ? 'text-accentGreen' : 'text-danger'}`}>
+                                            {logs[logs.length-1].isCorrect ? <Icons.CheckCircle className="w-5 h-5" /> : <Icons.AlertTriangle className="w-5 h-5" />}
+                                        </div>
+                                        <div>
+                                            <p className={`text-xs font-black uppercase tracking-widest mb-1 ${logs[logs.length-1].isCorrect ? 'text-accentGreen' : 'text-danger'}`}>
+                                                {logs[logs.length-1].isCorrect ? 'Correct Answer' : 'Incorrect Answer'}
+                                            </p>
+                                            <p className="text-textMain text-[11px] font-bold leading-relaxed">{currentQ.explanation}</p>
+                                        </div>
+                                    </div>
+                                    <button onClick={nextQuestion} className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-wider text-white shadow-soft-3d transition-all btn-modern flex items-center justify-center ${logs[logs.length-1].isCorrect ? 'bg-primary hover:bg-primaryDark' : 'bg-textMain hover:bg-gray-800'}`}>
+                                        {currentIndex + 1 === questions.length ? 'ดูผลสรุป (Finish)' : 'ไปข้อถัดไป (Next)'} <Icons.ChevronRight className="ml-1 w-5 h-5" />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 );
             }
@@ -567,63 +683,93 @@
                 const totalTime = logs.reduce((acc, log) => acc + log.timeSpent, 0);
 
                 return (
-                    <div className="min-h-screen flex flex-col items-center p-4 md:p-8">
+                    <div className="app-container overflow-y-auto custom-scrollbar bg-surface relative">
+                        
+                        {/* ✅ Modal ยืนยันการสอบใหม่ */}
+                        {showRetryConfirm && (
+                            <div className="absolute inset-0 bg-brandNavy/60 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fade-in-up">
+                                <div className="bg-white rounded-[32px] p-8 w-full max-w-sm shadow-2xl text-center border border-slate-100">
+                                    <div className="w-16 h-16 bg-blue-50 text-primary rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 border border-blue-100">📝</div>
+                                    <h3 className="text-xl font-black text-textMain mb-2">ทำแบบทดสอบใหม่</h3>
+                                    <div className="bg-surface p-4 rounded-xl mb-6 border border-slate-100">
+                                        <p className="text-textMuted text-xs font-bold leading-relaxed">
+                                            ระบบจะเริ่มการทดสอบครั้งที่ <span className="text-primary text-xl mx-1">{attemptCount + 1}</span><br/>
+                                            <span className="text-danger mt-1 block">ต้องตอบถูก 100% จึงจะผ่านเกณฑ์</span>
+                                        </p>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <button onClick={confirmRetry} className="w-full bg-primary text-white font-black py-4 rounded-2xl shadow-btn-primary btn-modern text-sm uppercase tracking-wider">
+                                            ยืนยันเริ่มทำข้อสอบ
+                                        </button>
+                                        <button onClick={() => setShowRetryConfirm(false)} className="w-full bg-surface text-textMuted font-black py-4 rounded-2xl hover:bg-gray-200 transition-colors text-sm">
+                                            ยกเลิก (Cancel)
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {isSendingEmail ? (
-                            <div className="flex flex-col items-center justify-center h-[70vh]">
-                                <div className="w-20 h-20 border-4 border-slate-200 border-t-sky-500 rounded-full animate-spin mb-6"></div>
-                                <h2 className="text-3xl font-bold text-slate-800">กำลังประมวลผลข้อมูลลง Supabase...</h2>
+                            <div className="flex flex-col items-center justify-center h-full">
+                                <div className="w-16 h-16 border-4 border-surface border-t-primary rounded-full animate-spin mb-6 shadow-sm"></div>
+                                <h2 className="text-xl font-black text-textMain">กำลังประมวลผลข้อมูล...</h2>
+                                <p className="text-[10px] text-textMuted font-bold uppercase tracking-widest mt-2">Saving to Supabase</p>
                             </div>
                         ) : (
-                            <div className="max-w-4xl w-full space-y-6">
-                                <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
-                                    <div className={`p-12 text-center text-white ${isPassed ? 'bg-emerald-600' : 'bg-rose-600'}`}>
-                                        {isPassed ? <Icons.Award className="w-24 h-24 mx-auto mb-6 text-emerald-200" /> : <Icons.XCircle className="w-24 h-24 mx-auto mb-6 text-rose-200" />}
-                                        <h1 className="text-4xl md:text-5xl font-black mb-3">{isPassed ? 'ยินดีด้วย! ท่านผ่านการประเมิน' : 'ไม่ผ่านเกณฑ์การประเมิน (100%)'}</h1>
+                            <div className="flex flex-col min-h-full">
+                                <div className={`pt-12 pb-10 px-6 rounded-b-[40px] shadow-lg relative overflow-hidden shrink-0 text-center text-white ${isPassed ? 'bg-accentGreen' : 'bg-danger'}`}>
+                                    <div className="absolute top-0 right-0 w-48 h-48 bg-white opacity-20 rounded-full blur-2xl transform translate-x-1/3 -translate-y-1/4"></div>
+                                    <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-[24px] flex items-center justify-center mx-auto mb-4 border border-white/30 shadow-inner">
+                                        {isPassed ? <Icons.Award className="w-10 h-10" /> : <Icons.XCircle className="w-10 h-10" />}
                                     </div>
-                                    
-                                    <div className="p-8 md:p-12 text-center">
-                                        <div className="grid grid-cols-3 gap-4 mb-10">
-                                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                                <div className="text-slate-500 text-sm font-bold uppercase mb-1">คะแนนรวม</div>
-                                                <div className="text-3xl font-black text-slate-800">{score}/{questions.length}</div>
-                                            </div>
-                                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                                <div className="text-slate-500 text-sm font-bold uppercase mb-1">เวลาค้นคว้า</div>
-                                                <div className="text-3xl font-black text-slate-800">{formatTime(totalTime)}</div>
-                                            </div>
-                                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                                <div className="text-slate-500 text-sm font-bold uppercase mb-1">จำนวนครั้งที่สอบ</div>
-                                                <div className="text-3xl font-black text-slate-800">{attemptCount}</div>
-                                            </div>
+                                    <h1 className="text-2xl font-black mb-1">{isPassed ? 'Passed!' : 'Failed!'}</h1>
+                                    <p className="text-white/80 text-[10px] font-bold uppercase tracking-widest">{isPassed ? 'Congratulations' : 'Must score 100%'}</p>
+                                </div>
+                                
+                                <div className="flex-1 px-6 pt-8 pb-10 flex flex-col">
+                                    <div className="grid grid-cols-3 gap-3 mb-8">
+                                        <div className="bg-card p-4 rounded-[20px] shadow-soft-3d border border-slate-100 text-center">
+                                            <div className="text-textMuted text-[9px] font-black uppercase tracking-widest mb-1.5">Score</div>
+                                            <div className="text-xl font-black text-textMain">{score}<span className="text-xs text-slate-400">/25</span></div>
                                         </div>
+                                        <div className="bg-card p-4 rounded-[20px] shadow-soft-3d border border-slate-100 text-center">
+                                            <div className="text-textMuted text-[9px] font-black uppercase tracking-widest mb-1.5">Time</div>
+                                            <div className="text-xl font-black text-textMain">{formatTime(totalTime)}</div>
+                                        </div>
+                                        <div className="bg-card p-4 rounded-[20px] shadow-soft-3d border border-slate-100 text-center">
+                                            <div className="text-textMuted text-[9px] font-black uppercase tracking-widest mb-1.5">Attempt</div>
+                                            <div className="text-xl font-black text-textMain">#{attemptCount}</div>
+                                        </div>
+                                    </div>
 
-                                        {!isPassed && (
-                                            <div className="bg-rose-50 border border-rose-200 p-8 rounded-2xl mb-8 text-left shadow-sm">
-                                                <h3 className="font-bold text-rose-800 mb-4 text-xl flex items-center"><Icons.AlertTriangle className="w-6 h-6 mr-2"/> ข้อที่ท่านพลาดไป (โปรดทบทวนก่อนทำใหม่)</h3>
-                                                <ul className="space-y-4">
-                                                    {logs.filter(l => !l.isCorrect).map((log, i) => {
-                                                        const q = questions.find(q => q.id === log.questionId);
-                                                        return (
-                                                            <li key={i} className="text-slate-700 text-base flex items-start bg-white p-4 rounded-lg border border-rose-100">
-                                                                <Icons.XCircle className="w-5 h-5 text-rose-500 mr-3 shrink-0 mt-0.5" />
-                                                                <div>
-                                                                    <strong className="block text-slate-900 mb-1">{q.topic}</strong>
-                                                                    <span className="text-rose-700 bg-rose-100 px-2 py-0.5 rounded text-sm mr-2">เฉลย</span> {q.explanation}
-                                                                </div>
-                                                            </li>
-                                                        );
-                                                    })}
-                                                </ul>
-                                            </div>
-                                        )}
+                                    {!isPassed && (
+                                        <div className="bg-card border border-red-100 p-5 rounded-[24px] mb-8 shadow-sm">
+                                            <h3 className="font-black text-danger mb-4 text-sm flex items-center"><Icons.AlertTriangle className="w-4 h-4 mr-2"/> ข้อที่ท่านพลาดไป</h3>
+                                            <ul className="space-y-3">
+                                                {logs.filter(l => !l.isCorrect).map((log, i) => {
+                                                    const q = questions.find(q => q.id === log.questionId);
+                                                    return (
+                                                        <li key={i} className="text-[11px] font-bold flex items-start bg-red-50 p-3 rounded-xl border border-red-100/50">
+                                                            <div className="bg-white p-1 rounded shadow-sm mr-2 shrink-0 mt-0.5"><Icons.XCircle className="w-3 h-3 text-danger" /></div>
+                                                            <div>
+                                                                <span className="text-textMain mb-1.5 block">{q.topic}</span>
+                                                                <span className="text-danger leading-relaxed">{q.explanation}</span>
+                                                            </div>
+                                                        </li>
+                                                    );
+                                                })}
+                                            </ul>
+                                        </div>
+                                    )}
 
+                                    <div className="mt-auto">
                                         {isPassed ? (
-                                            <button onClick={handleIssueCertificate} className="w-full bg-[#0f172a] hover:bg-[#1e293b] text-white text-xl font-bold py-5 rounded-xl shadow-xl transition-transform hover:scale-[1.02] flex justify-center items-center">
-                                                <Icons.Mail className="w-7 h-7 mr-3" /> ออกใบประกาศนียบัตร
+                                            <button onClick={handleIssueCertificate} className="w-full bg-textMain text-white text-sm font-black py-4 rounded-2xl shadow-lg transition-transform hover:scale-[1.02] flex justify-center items-center btn-modern">
+                                                <Icons.Mail className="w-5 h-5 mr-2" /> ออกใบประกาศนียบัตร
                                             </button>
                                         ) : (
-                                            <button onClick={handleRetry} className="w-full bg-[#0ea5e9] hover:bg-[#0284c7] text-white text-xl font-bold py-5 rounded-xl shadow-xl transition-transform hover:scale-[1.02] flex justify-center items-center">
-                                                <Icons.RotateCcw className="w-7 h-7 mr-3" /> เริ่มทำแบบทดสอบใหม่อีกครั้ง
+                                            <button onClick={handleRetryClick} className="w-full bg-primary text-white text-sm font-black py-4 rounded-2xl shadow-btn-primary transition-transform hover:scale-[1.02] flex justify-center items-center btn-modern">
+                                                <Icons.RotateCcw className="w-5 h-5 mr-2" /> เริ่มทำแบบทดสอบใหม่อีกครั้ง
                                             </button>
                                         )}
                                     </div>
@@ -636,43 +782,48 @@
 
             if (step === 'certificate') {
                 return (
-                    <div className="min-h-screen bg-slate-200 p-4 md:p-8 flex flex-col items-center justify-center font-sans">
-                        <div className="max-w-4xl w-full bg-white p-3 shadow-2xl animate-fade-in-up print:shadow-none print:p-0">
-                            <div className="border-[14px] border-[#0f172a] p-3 h-full">
-                                <div className="border-4 border-[#0ea5e9] p-12 md:p-16 text-center h-full relative overflow-hidden bg-white">
-                                    <Icons.ShieldCheck className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[30rem] h-[30rem] text-slate-50 opacity-60" />
+                    <div className="app-container bg-surface overflow-y-auto p-6 flex flex-col font-sans relative print:p-0 print:bg-white print:w-full print:max-w-none print:h-auto print:block">
+                        <div className="flex-1 bg-card rounded-[32px] p-2 shadow-soft-3d border border-slate-100 mb-6 print:shadow-none print:border-none print:mb-0 print:rounded-none">
+                            <div className="border-[10px] border-textMain rounded-[24px] p-2 h-full print:border-8">
+                                <div className="border-2 border-primary rounded-[16px] p-6 text-center h-full relative overflow-hidden bg-white flex flex-col justify-center">
+                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-blue-50 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+                                    <Icons.ShieldCheck className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 text-slate-50 opacity-40 pointer-events-none" />
+                                    
                                     <div className="relative z-10">
-                                        <h1 className="text-5xl md:text-6xl font-black text-[#0f172a] uppercase tracking-widest mb-4 font-serif">Certificate</h1>
-                                        <h2 className="text-2xl text-sky-600 font-bold tracking-[0.3em] uppercase mb-16">of Achievement</h2>
-                                        <p className="text-slate-500 italic text-xl mb-6">This is to certify that</p>
-                                        <div className="text-5xl font-bold text-slate-800 border-b-2 border-slate-300 inline-block pb-4 px-16 mb-10">
+                                        <h1 className="text-3xl font-black text-textMain uppercase tracking-widest mb-2 font-serif">Certificate</h1>
+                                        <h2 className="text-[10px] text-primary font-black tracking-[0.2em] uppercase mb-8">of Achievement</h2>
+                                        
+                                        <p className="text-textMuted italic text-xs font-bold mb-4">This is to certify that</p>
+                                        <div className="text-lg font-black text-textMain border-b-2 border-slate-200 inline-block pb-2 px-6 mb-6 line-clamp-1 w-full max-w-[250px]">
                                             {user.name}
                                         </div>
-                                        <p className="text-slate-600 text-xl max-w-2xl mx-auto leading-relaxed mb-20">
-                                            Has successfully completed the Knowledge Verification Test for the <br/>
-                                            <strong className="text-2xl block mt-2 text-[#0f172a]">US Multi-Asset Index Principal Protection</strong><br/>
+                                        
+                                        <p className="text-textMain text-[11px] font-bold px-2 leading-relaxed mb-10">
+                                            Has successfully completed the<br/>Knowledge Verification Test for the<br/>
+                                            <strong className="text-[13px] block mt-1.5 text-primary">US Multi-Asset Index Principal Protection</strong><br/>
                                             achieving a perfect score of 100% on Attempt #{attemptCount}.
                                         </p>
-                                        <div className="flex justify-between items-end mt-16 px-4 md:px-12">
-                                            <div className="text-center">
-                                                <div className="text-slate-500 font-mono text-base mb-2">ID: {user.id}</div>
-                                                <div className="border-t-2 border-[#0f172a] pt-2 text-slate-800 font-bold uppercase tracking-wider text-sm w-48">Employee ID</div>
+                                        
+                                        <div className="flex justify-between items-end mt-auto px-2">
+                                            <div className="text-center w-1/3">
+                                                <div className="text-textMuted font-mono text-[9px] font-bold mb-1 truncate">{user.id}</div>
+                                                <div className="border-t border-textMain pt-1 text-textMain font-black uppercase tracking-wider text-[7px]">Emp ID</div>
                                             </div>
-                                            <div className="text-center px-4">
-                                                <Icons.Award className="w-20 h-20 text-amber-500 mx-auto mb-3" />
-                                                <div className="text-[#0f172a] font-black tracking-widest text-lg">PRUDENTIAL</div>
+                                            <div className="text-center w-1/3 px-2">
+                                                <div className="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-2 border border-orange-100"><Icons.Award className="w-6 h-6 text-accentOrange" /></div>
+                                                <div className="text-textMain font-black tracking-widest text-[8px]">PRUDENTIAL</div>
                                             </div>
-                                            <div className="text-center">
-                                                <div className="text-slate-800 font-bold text-lg mb-2">{user.zone}</div>
-                                                <div className="border-t-2 border-[#0f172a] pt-2 text-slate-800 font-bold uppercase tracking-wider text-sm w-48">Department (Zone)</div>
+                                            <div className="text-center w-1/3">
+                                                <div className="text-textMain font-black text-[10px] mb-1 truncate">{user.zone}</div>
+                                                <div className="border-t border-textMain pt-1 text-textMain font-black uppercase tracking-wider text-[7px]">Zone (RH)</div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <button onClick={() => window.print()} className="mt-8 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-8 py-4 rounded-xl font-bold shadow-md flex items-center transition-colors print:hidden text-lg">
-                            <Icons.Download className="w-6 h-6 mr-3 text-sky-600" /> พิมพ์หรือบันทึก Certificate เป็น PDF
+                        <button onClick={() => window.print()} className="mt-auto bg-white border border-slate-200 text-textMain py-4 rounded-2xl font-black shadow-soft-3d flex items-center justify-center btn-modern print:hidden text-sm w-full shrink-0">
+                            <Icons.Download className="w-5 h-5 mr-2 text-primary" /> บันทึก Certificate เป็น PDF
                         </button>
                     </div>
                 );
@@ -684,3 +835,5 @@
     </script>
 </body>
 </html>
+
+
